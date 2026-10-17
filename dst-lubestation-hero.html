@@ -1,0 +1,861 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>DST Lubestation — Bulk Oil Distribution Header</title>
+<meta name="description" content="هیرو سه‌بعدی تعاملی DST Lubestation: مخزن ذخیره بالک، لجستیک ناوگان و نازل دقیق توزیع روغن دیزل.">
+<meta name="theme-color" content="#000000">
+<link rel="preload" href="vendor/three.module.min.js" as="script" crossorigin>
+<style>
+  :root{
+    --bg:#000000;
+    --cyan:#22d3ee;
+    --green:#22c55e;
+    --emerald:#10b981;
+    --ink:#f5f7f7;
+    --muted:#9aa5a3;
+    --line:rgba(255,255,255,.10);
+    --panel:rgba(14,16,16,.55);
+    --radius:14px;
+    --maxw:1440px;
+    --nav-h:44px;
+    --banner-h:34px;
+  }
+  *,*::before,*::after{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:"Vazirmatn","Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  ::selection{background:var(--emerald);color:#001b14}
+  a{color:inherit;text-decoration:none}
+  button{font:inherit;color:inherit}
+
+  /* ---------- top promo banner ---------- */
+  .promo{
+    height:var(--banner-h);
+    display:flex;align-items:center;justify-content:center;
+    gap:8px;
+    background:linear-gradient(90deg,#04120f,#07201a 40%,#04120f);
+    border-bottom:1px solid var(--line);
+    font-size:12.5px;letter-spacing:.02em;color:#bfeee0;
+    padding:0 14px;text-align:center;
+    position:sticky;top:0;z-index:60;
+  }
+  .promo b{color:var(--green);font-weight:700}
+  .promo .dot{width:5px;height:5px;border-radius:50%;background:var(--cyan);flex:none;
+    box-shadow:0 0 8px 2px rgba(34,211,238,.7)}
+
+  /* ---------- nav ---------- */
+  header.nav{
+    position:sticky;top:var(--banner-h);z-index:59;
+    background:rgba(0,0,0,.72);
+    backdrop-filter:blur(14px) saturate(140%);
+    -webkit-backdrop-filter:blur(14px) saturate(140%);
+    border-bottom:1px solid var(--line);
+  }
+  .nav-row{
+    max-width:var(--maxw);margin:0 auto;
+    display:flex;align-items:center;gap:16px;
+    height:var(--nav-h);padding:0 20px;
+  }
+  .crumb{
+    display:flex;align-items:center;gap:6px;
+    font-size:12px;color:var(--muted);white-space:nowrap;
+    overflow:hidden;text-overflow:ellipsis;
+  }
+  .crumb b{color:var(--ink);font-weight:600}
+  .crumb .sep{opacity:.5}
+  .crumb .current{color:var(--green)}
+
+  .nav-actions{display:flex;align-items:center;gap:8px;margin-inline-start:auto}
+  .pill{
+    display:inline-flex;align-items:center;gap:6px;
+    height:30px;padding:0 11px;border-radius:999px;
+    border:1px solid var(--line);background:rgba(255,255,255,.03);
+    font-size:12px;color:var(--ink);cursor:pointer;
+    transition:border-color .2s,background .2s,transform .15s;
+    white-space:nowrap;
+  }
+  .pill:hover{border-color:rgba(34,197,94,.5);background:rgba(34,197,94,.08)}
+  .pill:active{transform:scale(.96)}
+  .pill svg{width:14px;height:14px;flex:none}
+  .pill.like.active svg{fill:var(--emerald);stroke:var(--emerald)}
+  .pill.like.active{color:var(--emerald);border-color:rgba(16,185,129,.5)}
+  .pill.copied{color:var(--green);border-color:rgba(34,197,94,.6)}
+
+  nav.links{display:flex;align-items:center;gap:22px;margin-inline-start:10px}
+  nav.links a{
+    font-size:12px;letter-spacing:.08em;color:var(--muted);font-weight:600;
+    transition:color .2s;
+  }
+  nav.links a:hover{color:var(--ink)}
+  .menu-btn{display:none;width:30px;height:30px;border-radius:8px;border:1px solid var(--line);
+    background:rgba(255,255,255,.03);align-items:center;justify-content:center;cursor:pointer}
+  .menu-btn svg{width:16px;height:16px}
+
+  /* ---------- scroll stage ---------- */
+  .scroll-stage{position:relative;height:400vh}
+  .stage-sticky{
+    position:sticky;
+    top:calc(var(--banner-h) + var(--nav-h));
+    height:calc(100vh - var(--banner-h) - var(--nav-h));
+    overflow:hidden;
+    background:
+      radial-gradient(ellipse 70% 55% at 72% 38%, rgba(16,185,129,.14), transparent 60%),
+      radial-gradient(ellipse 60% 50% at 20% 75%, rgba(34,211,238,.10), transparent 60%),
+      #000000;
+  }
+  .grid-overlay{
+    position:absolute;inset:0;pointer-events:none;opacity:.35;mix-blend-mode:screen;
+    background-image:
+      linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px);
+    background-size:42px 42px;
+    mask-image:radial-gradient(ellipse 70% 70% at 50% 45%, #000 40%, transparent 85%);
+  }
+  canvas#scene{position:absolute;inset:0;display:block;width:100%;height:100%}
+  .vignette{position:absolute;inset:0;pointer-events:none;
+    background:radial-gradient(ellipse 120% 90% at 50% 50%, transparent 55%, rgba(0,0,0,.65) 100%);
+  }
+  .noise-fade-top{position:absolute;left:0;right:0;top:0;height:80px;pointer-events:none;
+    background:linear-gradient(#000, transparent)}
+
+  .copy-wrap{
+    position:relative;z-index:5;height:100%;
+    max-width:var(--maxw);margin:0 auto;padding:0 20px;
+    display:flex;flex-direction:column;justify-content:center;
+    pointer-events:none;
+  }
+  .kicker{
+    display:inline-flex;align-items:center;gap:8px;
+    width:fit-content;
+    font-size:11.5px;letter-spacing:.14em;font-weight:700;color:var(--green);
+    padding:6px 12px;border:1px solid rgba(34,197,94,.35);border-radius:999px;
+    background:rgba(34,197,94,.06);margin-bottom:22px;
+    opacity:0;transform:translateY(10px);
+    transition:opacity .5s ease, transform .5s ease;
+  }
+  .kicker.show{opacity:1;transform:none}
+  .kicker .n{color:var(--cyan)}
+
+  h1.title{
+    font-size:clamp(2.6rem, 7vw, 6.2rem);
+    line-height:.98;font-weight:800;letter-spacing:-.03em;
+    margin:0 0 18px;max-width:14ch;
+  }
+  .title-stage{
+    display:block;position:relative;overflow:hidden;
+    background:linear-gradient(180deg,#fff 0%,#dfe8e6 60%,#9fe6cf 100%);
+    -webkit-background-clip:text;background-clip:text;
+    color:transparent;-webkit-text-fill-color:transparent;
+  }
+  .title-stage .fa{
+    display:block;font-size:clamp(1rem,2.2vw,1.35rem);font-weight:600;letter-spacing:0;
+    color:var(--cyan);-webkit-text-fill-color:var(--cyan);margin-top:6px;
+  }
+  .sub{
+    font-size:clamp(.95rem,1.4vw,1.15rem);color:var(--muted);max-width:46ch;line-height:1.7;
+    opacity:0;transform:translateY(10px);transition:opacity .5s ease .1s, transform .5s ease .1s;
+  }
+  .sub.show{opacity:1;transform:none}
+
+  .cta-row{display:flex;gap:12px;margin-top:30px;pointer-events:auto;
+    opacity:0;transform:translateY(10px);transition:opacity .5s ease .18s, transform .5s ease .18s;}
+  .cta-row.show{opacity:1;transform:none}
+  .btn{
+    display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 20px;border-radius:10px;
+    font-size:13.5px;font-weight:700;cursor:pointer;transition:transform .15s, box-shadow .2s, background .2s;
+  }
+  .btn.primary{background:linear-gradient(135deg,var(--green),var(--emerald));color:#00140f;
+    box-shadow:0 8px 24px -6px rgba(16,185,129,.55)}
+  .btn.primary:hover{transform:translateY(-1px);box-shadow:0 10px 30px -4px rgba(16,185,129,.7)}
+  .btn.ghost{border:1px solid var(--line);background:rgba(255,255,255,.03)}
+  .btn.ghost:hover{border-color:rgba(255,255,255,.3)}
+
+  /* floating description card, bottom-right */
+  .desc-card{
+    position:absolute;right:20px;bottom:26px;z-index:6;
+    width:min(380px, calc(100vw - 40px));
+    padding:18px 20px;border-radius:var(--radius);
+    background:var(--panel);
+    border:1px solid var(--line);
+    backdrop-filter:blur(16px) saturate(150%);
+    -webkit-backdrop-filter:blur(16px) saturate(150%);
+    pointer-events:auto;
+    opacity:0;transform:translateY(14px);
+    transition:opacity .5s ease, transform .5s ease;
+  }
+  [dir="rtl"] .desc-card{right:auto;left:20px}
+  .desc-card.show{opacity:1;transform:none}
+  .desc-card .tag{
+    display:flex;align-items:center;gap:8px;font-size:11px;letter-spacing:.1em;
+    color:var(--cyan);font-weight:700;margin-bottom:8px;
+  }
+  .desc-card .tag .ix{width:18px;height:18px;border-radius:5px;background:rgba(34,211,238,.12);
+    display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--cyan)}
+  .desc-card p{margin:0;font-size:13px;line-height:1.8;color:#d8dedd}
+  .desc-card .en{display:block;margin-top:8px;font-size:11.5px;color:var(--muted);font-style:italic}
+
+  /* stage dots */
+  .stage-dots{
+    position:absolute;left:20px;bottom:30px;z-index:6;
+    display:flex;flex-direction:column;gap:10px;pointer-events:auto;
+  }
+  [dir="rtl"] .stage-dots{left:auto;right:20px}
+  .stage-dot{
+    display:flex;align-items:center;gap:10px;cursor:pointer;background:none;border:none;padding:4px 0;
+    opacity:.55;transition:opacity .25s;
+  }
+  .stage-dot:hover,.stage-dot.active{opacity:1}
+  .stage-dot i{width:9px;height:9px;border-radius:50%;background:#3a4542;flex:none;
+    transition:background .25s, box-shadow .25s, transform .25s}
+  .stage-dot.active i{background:var(--green);box-shadow:0 0 10px 2px rgba(34,197,94,.7);transform:scale(1.25)}
+  .stage-dot span{font-size:11.5px;color:var(--muted);letter-spacing:.04em;white-space:nowrap}
+  .stage-dot.active span{color:var(--ink)}
+
+  .scroll-cue{
+    position:absolute;left:50%;bottom:26px;transform:translateX(-50%);z-index:6;
+    display:flex;flex-direction:column;align-items:center;gap:6px;
+    font-size:10.5px;letter-spacing:.14em;color:var(--muted);
+    opacity:.8;transition:opacity .4s;pointer-events:none;
+  }
+  .scroll-cue .line{width:1px;height:26px;background:linear-gradient(var(--green),transparent);
+    animation:cue 1.6s ease-in-out infinite}
+  @keyframes cue{0%{transform:scaleY(.2);opacity:.2}50%{transform:scaleY(1);opacity:1}100%{transform:scaleY(.2);opacity:.2}}
+  .scroll-cue.hide{opacity:0}
+
+  /* ---------- code / prompt panel ---------- */
+  .panel-backdrop{
+    position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(3px);
+    z-index:80;display:none;align-items:center;justify-content:center;padding:20px;
+  }
+  .panel-backdrop.open{display:flex}
+  .code-panel{
+    width:min(720px,100%);max-height:80vh;overflow:auto;border-radius:16px;
+    background:#070a09;border:1px solid var(--line);box-shadow:0 30px 80px -20px rgba(0,0,0,.8);
+  }
+  .code-panel header{display:flex;align-items:center;justify-content:space-between;
+    padding:14px 18px;border-bottom:1px solid var(--line);position:sticky;top:0;background:#070a09}
+  .code-panel header b{font-size:13px}
+  .code-panel .x{cursor:pointer;width:26px;height:26px;border-radius:8px;border:1px solid var(--line);
+    display:flex;align-items:center;justify-content:center}
+  .code-panel pre{margin:0;padding:18px;font-size:12px;line-height:1.7;color:#b9f3da;
+    white-space:pre-wrap;word-break:break-word;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+
+  .toast{
+    position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);
+    background:#0d1a16;border:1px solid rgba(34,197,94,.4);color:#c9f7df;
+    padding:10px 18px;border-radius:999px;font-size:12.5px;z-index:90;
+    opacity:0;transition:opacity .25s, transform .25s;pointer-events:none;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  /* ---------- responsive ---------- */
+  @media (max-width:860px){
+    nav.links{display:none}
+    .menu-btn{display:flex}
+    .crumb{font-size:11px}
+    .desc-card{right:14px;left:14px;width:auto;bottom:108px}
+    [dir="rtl"] .desc-card{left:14px;right:14px}
+    .stage-dots{bottom:30px;flex-direction:row;gap:14px;left:14px;right:14px;justify-content:space-between}
+    [dir="rtl"] .stage-dots{right:14px;left:14px}
+    .stage-dot span{display:none}
+    .btn{height:40px;padding:0 16px;font-size:12.5px}
+    .promo{font-size:11px;padding:0 10px}
+  }
+  @media (max-width:640px){
+    .crumb span:not(.current):not(.sep){display:none}
+    .pill .lbl{display:none}
+    .pill{padding:0 9px;gap:0}
+    .pill svg{width:15px;height:15px}
+    .nav-actions{gap:6px}
+    .nav-row{gap:8px;padding:0 14px}
+    .copy-wrap{justify-content:flex-start;padding-top:64px}
+    h1.title{margin-bottom:12px}
+    .sub{max-width:36ch}
+    .cta-row{display:none}
+  }
+  @media (max-width:860px){
+    nav.links.open{
+      display:flex;position:absolute;top:100%;insetInlineStart:0;width:100%;
+      flex-direction:column;background:rgba(0,0,0,.95);border-bottom:1px solid var(--line);
+      padding:14px 20px;gap:16px;
+    }
+  }
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto}
+    .scroll-cue .line{animation:none}
+  }
+</style>
+</head>
+<body>
+
+<div class="promo">
+  <span class="dot"></span>
+  <span><b>DST Lubestation</b> — زیرساخت هوشمند توزیع بالک روغن دیزل؛ از مخزن تا نازل، کاملاً خودکار و قابل ردیابی.</span>
+</div>
+
+<header class="nav">
+  <div class="nav-row">
+    <div class="crumb">
+      <span>Components</span><span class="sep">/</span>
+      <span>Header</span><span class="sep">/</span>
+      <b class="current">DST Lubestation Header — Bulk Distribution</b>
+    </div>
+
+    <div class="nav-actions">
+      <button class="pill like" id="likeBtn" type="button" aria-pressed="false" aria-label="پسندیدن">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7.5-4.7-10-9.4C.5 7.9 2.7 4 6.4 4c2 0 3.6 1 5.6 3 2-2 3.6-3 5.6-3 3.7 0 5.9 3.9 4.4 7.6C19.5 16.3 12 21 12 21Z"/></svg>
+        <span id="likeCount">250</span>
+      </button>
+      <button class="pill" id="copyPromptBtn" type="button" aria-label="Copy Master Prompt" title="Copy Master Prompt">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+        <span class="lbl">Copy Master Prompt</span>
+      </button>
+      <button class="pill" id="viewCodeBtn" type="button" aria-label="View Code" title="View Code">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18-6-6 6-6M15 6l6 6-6 6"/></svg>
+        <span class="lbl">View Code</span>
+      </button>
+    </div>
+
+    <nav class="links" id="navLinks">
+      <a href="#products">PRODUCTS</a>
+      <a href="#features">FEATURES</a>
+      <a href="#technology">TECHNOLOGY</a>
+      <a href="#support">SUPPORT</a>
+      <a href="#pricing">PRICING</a>
+    </nav>
+
+    <button class="menu-btn" id="menuBtn" type="button" aria-label="باز کردن منو">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+    </button>
+  </div>
+</header>
+
+<section class="scroll-stage" id="scrollStage">
+  <div class="stage-sticky">
+    <canvas id="scene"></canvas>
+    <div class="grid-overlay"></div>
+    <div class="vignette"></div>
+    <div class="noise-fade-top"></div>
+
+    <div class="copy-wrap">
+      <span class="kicker" id="kicker">STAGE <span class="n" id="kickerIx">01</span> / 04 — <span id="kickerLabel">BULK STORAGE</span></span>
+      <h1 class="title">
+        <span class="title-stage" id="titleMain">Bulk Storage</span>
+        <span class="fa" id="titleFa">مخزن روغن</span>
+      </h1>
+      <p class="sub" id="subText">Metallic nodes reconstruct into industrial storage tank geometry, representing precision volume management.</p>
+      <div class="cta-row">
+        <a class="btn primary" href="#products">مشاهده محصولات</a>
+        <a class="btn ghost" href="#technology">فناوری DST</a>
+      </div>
+    </div>
+
+    <div class="desc-card" id="descCard">
+      <div class="tag"><span class="ix" id="descIx">01</span> DST BULK STORAGE</div>
+      <p id="descFa">مخازن پلمپ‌شده و هوشمند، مدیریت دقیق حجم روغن ذخیره‌شده را برای هر نمایندگی تضمین می‌کنند.</p>
+      <span class="en" id="descEn">Metallic nodes reconstruct into industrial tank geometry.</span>
+    </div>
+
+    <div class="stage-dots" id="stageDots"></div>
+
+    <div class="scroll-cue" id="scrollCue">
+      <span>SCROLL</span>
+      <span class="line"></span>
+    </div>
+  </div>
+</section>
+
+<div class="toast" id="toast">کپی شد ✓</div>
+
+<div class="panel-backdrop" id="codePanelBackdrop">
+  <div class="code-panel">
+    <header>
+      <b>View Code — particle-stage.js (excerpt)</b>
+      <div class="x" id="closeCodeBtn">✕</div>
+    </header>
+    <pre id="codeExcerpt"></pre>
+  </div>
+</div>
+
+<script type="importmap">
+{ "imports": { "three": "./vendor/three.module.min.js" } }
+</script>
+<script type="module">
+import * as THREE from "three";
+
+/* ----------------------------------------------------------------
+   DST Lubestation Hero — 3D scroll-morphing particle system
+   4 stages: Bulk Storage -> Transit Flow -> Fleet Logistics -> Dispensing Nozzle
+-------------------------------------------------------------------*/
+
+const STAGES = [
+  {
+    key:"storage", label:"BULK STORAGE", title:"Bulk Storage", fa:"مخزن روغن",
+    sub:"Metallic nodes reconstruct into industrial storage tank geometry, representing precision volume management.",
+    descTag:"DST BULK STORAGE",
+    descFa:"مخازن پلمپ‌شده و هوشمند، مدیریت دقیق حجم روغن ذخیره‌شده را برای هر نمایندگی تضمین می‌کنند.",
+    descEn:"Metallic nodes reconstruct into industrial tank geometry."
+  },
+  {
+    key:"flow", label:"DYNAMIC TRANSIT", title:"Dynamic Transit", fa:"جریان و پراکندگی",
+    sub:"Fluid dispersion dynamics model real-time flow across the distribution network before transit begins.",
+    descTag:"DYNAMIC TRANSIT & FLOW",
+    descFa:"داده‌های برداشت و مصرف در لحظه پردازش می‌شوند تا مسیر بهینه توزیع بالک مشخص شود.",
+    descEn:"Particles disperse into organic fluid motion ahead of fleet transit."
+  },
+  {
+    key:"fleet", label:"FLEET LOGISTICS", title:"Fleet Logistics", fa:"تراک حمل",
+    sub:"Transport logistics align for seamless inter-city fleet distribution.",
+    descTag:"FLEET LOGISTICS",
+    descFa:"ناوگان حمل روغن بالک، مسیرهای بین‌شهری را با ردیابی لحظه‌ای و دقیق طی می‌کند.",
+    descEn:"Transport lattice aligns under live transit routes."
+  },
+  {
+    key:"nozzle", label:"DISPENSING NOZZLE", title:"Dispensing Nozzle", fa:"نازل روغن",
+    sub:"High-precision dispensing nozzle architecture ensuring exact volumetric measurement and control at every drawdown.",
+    descTag:"LUBRICATION CONTROL",
+    descFa:"نازل دقیق توزیع، هر برداشت را با کد خودرو ثبت کرده و کنترل مصرف را تضمین می‌کند.",
+    descEn:"Precision mechanical architecture for exact-volume dispensing."
+  }
+];
+
+const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const isSmall = window.innerWidth < 760;
+const PARTICLE_COUNT = isSmall ? 2600 : (window.innerWidth < 1100 ? 4200 : 6200);
+
+/* ---------- shape generators (all return Float32Array of length N*3) ---------- */
+
+function rand(a,b){ return a + Math.random()*(b-a); }
+
+function shapeTank(n){
+  const pos = new Float32Array(n*3);
+  const R = 3.1, H = 6.4;
+  for(let i=0;i<n;i++){
+    const r = Math.random();
+    let x,y,z;
+    if(r < 0.62){ // cylindrical body
+      const theta = Math.random()*Math.PI*2;
+      const rad = R + (Math.random()-0.5)*0.06;
+      x = Math.cos(theta)*rad;
+      z = Math.sin(theta)*rad;
+      y = rand(-H/2, H/2);
+    } else if(r < 0.70){ // gauge bands
+      const bandY = [-H*0.28, 0, H*0.28][Math.floor(Math.random()*3)];
+      const theta = Math.random()*Math.PI*2;
+      const rad = R + 0.09;
+      x = Math.cos(theta)*rad; z = Math.sin(theta)*rad; y = bandY + (Math.random()-0.5)*0.08;
+    } else if(r < 0.85){ // top cap
+      const theta = Math.random()*Math.PI*2;
+      const rad = Math.sqrt(Math.random())*R;
+      x = Math.cos(theta)*rad; z = Math.sin(theta)*rad; y = H/2 + (Math.random()-0.5)*0.05;
+    } else { // bottom cap + legs
+      const theta = Math.random()*Math.PI*2;
+      const rad = Math.sqrt(Math.random())*R;
+      x = Math.cos(theta)*rad; z = Math.sin(theta)*rad; y = -H/2 - (Math.random()-0.5)*0.05;
+    }
+    pos[i*3]=x; pos[i*3+1]=y; pos[i*3+2]=z;
+  }
+  return pos;
+}
+
+function shapeFlow(n){
+  const pos = new Float32Array(n*3);
+  for(let i=0;i<n;i++){
+    const x = rand(-6.2,6.2);
+    const seedA = Math.sin(x*0.6 + i*0.013)*1.6;
+    const seedB = Math.cos(x*0.9 - i*0.021)*1.1;
+    const y = seedA + rand(-0.9,0.9);
+    const z = seedB + rand(-0.9,0.9);
+    pos[i*3]=x; pos[i*3+1]=y; pos[i*3+2]=z;
+  }
+  return pos;
+}
+
+function shapeTruck(n){
+  const pos = new Float32Array(n*3);
+  const tankR = 1.5, tankLen = 6.6, cabLen = 1.9, cabW = 1.5, cabH = 1.5;
+  const wheelR = 0.55, trackZ = 1.55;
+  const bodyY = -0.3; // ride height offset
+  for(let i=0;i<n;i++){
+    const r = Math.random();
+    let x,y,z;
+    if(r < 0.52){ // horizontal tank
+      const theta = Math.random()*Math.PI*2;
+      const rad = tankR + (Math.random()-0.5)*0.05;
+      x = rand(-tankLen/2, tankLen/2);
+      y = Math.sin(theta)*rad + bodyY + 0.6;
+      z = Math.cos(theta)*rad;
+    } else if(r < 0.66){ // cab box (front = +x)
+      x = rand(tankLen/2, tankLen/2 + cabLen);
+      y = rand(bodyY, bodyY + cabH);
+      z = rand(-cabW/2, cabW/2);
+    } else if(r < 0.86){ // 4 wheels
+      const wx = Math.random() < 0.5 ? -tankLen/2 + 0.9 : tankLen/2 - 0.3;
+      const wz = Math.random() < 0.5 ? trackZ : -trackZ;
+      const theta = Math.random()*Math.PI*2;
+      x = wx + Math.cos(theta)*wheelR*0.25;
+      y = bodyY - 0.75 + Math.sin(theta)*wheelR;
+      z = wz;
+    } else { // road / transit lattice lines trailing behind
+      x = rand(-tankLen/2 - 7, tankLen/2 + cabLen);
+      const lane = [-1.6,-0.5,0.5,1.6][Math.floor(Math.random()*4)];
+      y = bodyY - 1.35;
+      z = lane + (Math.random()-0.5)*0.05;
+    }
+    pos[i*3]=x; pos[i*3+1]=y; pos[i*3+2]=z;
+  }
+  return pos;
+}
+
+function shapeNozzle(n){
+  const pos = new Float32Array(n*3);
+  const topR = 1.5, tipR = 0.14, H = 5.6;
+  for(let i=0;i<n;i++){
+    const r = Math.random();
+    let x,y,z;
+    if(r < 0.58){ // tapered cone body
+      const t = Math.pow(Math.random(),0.75); // bias toward top for density
+      const rad = topR + (tipR-topR)*t;
+      const theta = Math.random()*Math.PI*2;
+      x = Math.cos(theta)*rad;
+      z = Math.sin(theta)*rad;
+      y = H/2 - t*H;
+    } else if(r < 0.82){ // concentric calibration rings
+      const ringY = [H/2 - H*0.18, H/2 - H*0.42, H/2 - H*0.64][Math.floor(Math.random()*3)];
+      const t = (H/2 - ringY)/H;
+      const rad = (topR + (tipR-topR)*t) + 0.1;
+      const theta = Math.random()*Math.PI*2;
+      x = Math.cos(theta)*rad; z = Math.sin(theta)*rad; y = ringY + (Math.random()-0.5)*0.04;
+    } else { // dispensed precision jet stream below the tip
+      const t = Math.random();
+      const rad = tipR*0.35*(1-t*0.6);
+      const theta = Math.random()*Math.PI*2;
+      x = Math.cos(theta)*rad; z = Math.sin(theta)*rad;
+      y = -H/2 - t*2.6;
+    }
+    pos[i*3]=x; pos[i*3+1]=y; pos[i*3+2]=z;
+  }
+  return pos;
+}
+
+const shapeBuilders = [shapeTank, shapeFlow, shapeTruck, shapeNozzle];
+const targets = shapeBuilders.map(fn => fn(PARTICLE_COUNT));
+
+/* ---------- renderer / scene ---------- */
+
+const canvas = document.getElementById("scene");
+const renderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:false });
+renderer.setClearColor(0x000000, 1);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
+camera.position.set(0, 0.4, 13.5);
+
+const geometry = new THREE.BufferGeometry();
+const positions = new Float32Array(PARTICLE_COUNT*3);
+positions.set(targets[0]);
+const colors = new Float32Array(PARTICLE_COUNT*3);
+const sizes = new Float32Array(PARTICLE_COUNT);
+
+const palette = [
+  new THREE.Color(0x22d3ee), // cyan
+  new THREE.Color(0x22c55e), // green
+  new THREE.Color(0x10b981)  // emerald
+];
+for(let i=0;i<PARTICLE_COUNT;i++){
+  const c = palette[Math.floor(Math.random()*palette.length)];
+  colors[i*3]=c.r; colors[i*3+1]=c.g; colors[i*3+2]=c.b;
+  sizes[i] = rand(0.55, 1.6);
+}
+
+geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+geometry.setAttribute("aSize", new THREE.BufferAttribute(sizes, 1));
+
+const material = new THREE.ShaderMaterial({
+  transparent:true,
+  depthWrite:false,
+  blending:THREE.AdditiveBlending,
+  uniforms:{ uPixelRatio:{ value: Math.min(window.devicePixelRatio,2) } },
+  vertexShader:`
+    attribute float aSize;
+    varying vec3 vColor;
+    uniform float uPixelRatio;
+    void main(){
+      vColor = color;
+      vec4 mv = modelViewMatrix * vec4(position, 1.0);
+      gl_PointSize = aSize * uPixelRatio * (220.0 / -mv.z);
+      gl_Position = projectionMatrix * mv;
+    }
+  `,
+  fragmentShader:`
+    varying vec3 vColor;
+    void main(){
+      vec2 uv = gl_PointCoord - 0.5;
+      float d = length(uv);
+      float alpha = smoothstep(0.5, 0.0, d);
+      alpha *= alpha;
+      gl_FragColor = vec4(vColor, alpha);
+    }
+  `,
+  vertexColors:true
+});
+
+const points = new THREE.Points(geometry, material);
+scene.add(points);
+
+/* ---------- mouse repulsion (spring back) ---------- */
+const mouse = new THREE.Vector2(10,10);
+const mouseWorld = new THREE.Vector3(999,999,999);
+const raycaster = new THREE.Raycaster();
+const mousePlane = new THREE.Plane(new THREE.Vector3(0,0,1), 0);
+const repulsion = new Float32Array(PARTICLE_COUNT*3);
+const basePos = new Float32Array(PARTICLE_COUNT*3);
+
+function onPointerMove(x,y){
+  const rect = canvas.getBoundingClientRect();
+  mouse.x = ((x - rect.left) / rect.width) * 2 - 1;
+  mouse.y = -((y - rect.top) / rect.height) * 2 + 1;
+}
+if(!reduceMotion){
+  window.addEventListener("pointermove", e => onPointerMove(e.clientX, e.clientY), { passive:true });
+  window.addEventListener("touchmove", e => {
+    if(e.touches[0]) onPointerMove(e.touches[0].clientX, e.touches[0].clientY);
+  }, { passive:true });
+}
+
+/* ---------- stage / scroll driven morph ---------- */
+
+const stageDotsEl = document.getElementById("stageDots");
+STAGES.forEach((s, ix) => {
+  const b = document.createElement("button");
+  b.className = "stage-dot" + (ix===0 ? " active" : "");
+  b.type = "button";
+  b.innerHTML = `<i></i><span>${s.label}</span>`;
+  b.addEventListener("click", () => {
+    const scrollEl = document.getElementById("scrollStage");
+    const total = scrollEl.offsetHeight - window.innerHeight;
+    const target = scrollEl.offsetTop + (ix/(STAGES.length-1)) * total;
+    window.scrollTo({ top: target, behavior: reduceMotion ? "auto" : "smooth" });
+  });
+  stageDotsEl.appendChild(b);
+});
+const dotEls = [...stageDotsEl.querySelectorAll(".stage-dot")];
+
+const kicker = document.getElementById("kicker");
+const kickerIx = document.getElementById("kickerIx");
+const kickerLabel = document.getElementById("kickerLabel");
+const titleMain = document.getElementById("titleMain");
+const titleFa = document.getElementById("titleFa");
+const subText = document.getElementById("subText");
+const ctaRow = document.querySelector(".cta-row");
+const descCard = document.getElementById("descCard");
+const descIx = document.getElementById("descIx");
+const descTag = document.querySelector(".desc-card .tag");
+const descFa = document.getElementById("descFa");
+const descEn = document.getElementById("descEn");
+const scrollCue = document.getElementById("scrollCue");
+
+let currentStageIx = -1;
+function renderStageText(ix){
+  if(ix === currentStageIx) return;
+  currentStageIx = ix;
+  const s = STAGES[ix];
+  kickerIx.textContent = String(ix+1).padStart(2,"0");
+  kickerLabel.textContent = s.label;
+  titleMain.textContent = s.title;
+  titleFa.textContent = s.fa;
+  subText.textContent = s.sub;
+  descIx.textContent = String(ix+1).padStart(2,"0");
+  descTag.childNodes[descTag.childNodes.length-1].textContent = " " + s.descTag;
+  descFa.textContent = s.descFa;
+  descEn.textContent = s.descEn;
+  dotEls.forEach((d,i) => d.classList.toggle("active", i===ix));
+  [kicker, subText, ctaRow, descCard].forEach(el => el.classList.add("show"));
+}
+
+function ease(t){ return t<0.5 ? 4*t*t*t : 1-Math.pow(-2*t+2,3)/2; }
+
+const scrollStageEl = document.getElementById("scrollStage");
+let scrollProgress = 0; // 0..1 across all stages
+
+function updateScroll(){
+  const rect = scrollStageEl.getBoundingClientRect();
+  const total = scrollStageEl.offsetHeight - window.innerHeight;
+  const scrolled = -rect.top;
+  scrollProgress = Math.min(1, Math.max(0, scrolled/total));
+  scrollCue.classList.toggle("hide", scrollProgress > 0.03);
+
+  const span = (STAGES.length - 1) * scrollProgress;
+  const stageIx = Math.min(STAGES.length-2, Math.floor(span));
+  const localT = ease(span - stageIx);
+
+  const a = targets[stageIx];
+  const b = targets[stageIx+1];
+  for(let i=0;i<PARTICLE_COUNT*3;i++){
+    basePos[i] = a[i] + (b[i]-a[i]) * localT;
+  }
+
+  const roundedStage = Math.round(span);
+  renderStageText(Math.min(STAGES.length-1, roundedStage));
+}
+
+window.addEventListener("scroll", updateScroll, { passive:true });
+
+/* ---------- resize ---------- */
+function resize(){
+  const w = window.innerWidth, h = window.innerHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w/h;
+  camera.updateProjectionMatrix();
+}
+window.addEventListener("resize", resize);
+resize();
+updateScroll();
+renderStageText(0);
+requestAnimationFrame(() => [kicker, subText, ctaRow, descCard].forEach(el => el.classList.add("show")));
+
+/* ---------- animation loop ---------- */
+const clock = new THREE.Clock();
+let paused = false;
+document.addEventListener("visibilitychange", () => { paused = document.hidden; });
+
+function animate(){
+  requestAnimationFrame(animate);
+  if(paused) return;
+  const t = clock.getElapsedTime();
+
+  raycaster.setFromCamera(mouse, camera);
+  raycaster.ray.intersectPlane(mousePlane, mouseWorld);
+
+  const posAttr = geometry.attributes.position.array;
+  const radius = 2.2, strength = 1.6;
+
+  for(let i=0;i<PARTICLE_COUNT;i++){
+    const ix3 = i*3;
+    let bx = basePos[ix3], by = basePos[ix3+1], bz = basePos[ix3+2];
+
+    if(!reduceMotion){
+      bx += Math.sin(t*0.6 + i*0.37) * 0.035;
+      by += Math.cos(t*0.5 + i*0.21) * 0.035;
+    }
+
+    let rx = repulsion[ix3], ry = repulsion[ix3+1], rz = repulsion[ix3+2];
+
+    if(!reduceMotion && mouseWorld.x < 500){
+      const dx = bx - mouseWorld.x, dy = by - mouseWorld.y, dz = bz - mouseWorld.z;
+      const d2 = dx*dx + dy*dy + dz*dz;
+      if(d2 < radius*radius){
+        const d = Math.sqrt(d2) || 0.001;
+        const force = (1 - d/radius) * strength;
+        rx += (dx/d) * force * 0.15;
+        ry += (dy/d) * force * 0.15;
+        rz += (dz/d) * force * 0.15;
+      }
+    }
+    rx *= 0.9; ry *= 0.9; rz *= 0.9;
+    repulsion[ix3]=rx; repulsion[ix3+1]=ry; repulsion[ix3+2]=rz;
+
+    posAttr[ix3] = bx + rx;
+    posAttr[ix3+1] = by + ry;
+    posAttr[ix3+2] = bz + rz;
+  }
+  geometry.attributes.position.needsUpdate = true;
+
+  if(!reduceMotion){
+    points.rotation.y = Math.sin(t*0.05)*0.12 + scrollProgress*0.25;
+    camera.position.x += (mouse.x*0.6 - camera.position.x) * 0.03;
+    camera.position.y += (0.4 + mouse.y*0.3 - camera.position.y) * 0.03;
+    camera.lookAt(0,0,0);
+  }
+
+  renderer.render(scene, camera);
+}
+animate();
+
+/* ---------- UI: like, copy prompt, view code, mobile menu ---------- */
+
+const likeBtn = document.getElementById("likeBtn");
+const likeCount = document.getElementById("likeCount");
+const LIKE_KEY = "dst-lubestation-hero-liked";
+let liked = localStorage.getItem(LIKE_KEY) === "1";
+let baseCount = 250;
+function paintLike(){
+  likeBtn.classList.toggle("active", liked);
+  likeBtn.setAttribute("aria-pressed", String(liked));
+  likeCount.textContent = baseCount + (liked ? 1 : 0);
+}
+paintLike();
+likeBtn.addEventListener("click", () => {
+  liked = !liked;
+  localStorage.setItem(LIKE_KEY, liked ? "1" : "0");
+  paintLike();
+});
+
+const toast = document.getElementById("toast");
+function showToast(msg){
+  toast.textContent = msg;
+  toast.classList.add("show");
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(() => toast.classList.remove("show"), 1800);
+}
+
+const MASTER_PROMPT = `Build a fullscreen dark biotech-style hero for "DST Lubestation" (bulk diesel-oil distribution).
+Pitch-black (#000) background, sticky nav with breadcrumb (Components > Header > DST Lubestation Header),
+promo banner, like counter, Copy Master Prompt / View Code actions, and PRODUCTS/FEATURES/TECHNOLOGY/SUPPORT/PRICING links.
+Center a scroll-driven Three.js particle system (cyan/green/emerald, additive glow) that morphs through four stages:
+1) Bulk Storage Tank  2) Dynamic Transit Flow  3) Fleet Logistics Tanker Truck  4) Precision Dispensing Nozzle.
+Particles scatter from the cursor and spring back. Large left-aligned titles per stage, floating translucent
+description card bottom-right, clickable stage-dots, fully responsive, reduced-motion aware.`;
+
+document.getElementById("copyPromptBtn").addEventListener("click", async (e) => {
+  try{
+    await navigator.clipboard.writeText(MASTER_PROMPT);
+    showToast("پرامپت اصلی کپی شد ✓");
+    e.currentTarget.classList.add("copied");
+    setTimeout(() => e.currentTarget.classList.remove("copied"), 1200);
+  }catch(err){
+    showToast("کپی ناموفق بود — مرورگر اجازه نداد");
+  }
+});
+
+const codePanelBackdrop = document.getElementById("codePanelBackdrop");
+const codeExcerpt = document.getElementById("codeExcerpt");
+document.getElementById("viewCodeBtn").addEventListener("click", () => {
+  codeExcerpt.textContent =
+`// shape generator excerpt — dst-lubestation-hero.html
+function shapeNozzle(n){
+  const pos = new Float32Array(n*3);
+  const topR = 1.5, tipR = 0.14, H = 5.6;
+  for(let i=0;i<n;i++){
+    const t = Math.pow(Math.random(), 0.75);
+    const rad = topR + (tipR-topR)*t;
+    const theta = Math.random()*Math.PI*2;
+    pos[i*3]   = Math.cos(theta)*rad;
+    pos[i*3+1] = H/2 - t*H;
+    pos[i*3+2] = Math.sin(theta)*rad;
+  }
+  return pos;
+}
+// Full source: /dst-lubestation-hero.html in this repository.`;
+  codePanelBackdrop.classList.add("open");
+});
+document.getElementById("closeCodeBtn").addEventListener("click", () => codePanelBackdrop.classList.remove("open"));
+codePanelBackdrop.addEventListener("click", (e) => { if(e.target === codePanelBackdrop) codePanelBackdrop.classList.remove("open"); });
+
+const menuBtn = document.getElementById("menuBtn");
+const navLinks = document.getElementById("navLinks");
+menuBtn.addEventListener("click", () => navLinks.classList.toggle("open"));
+navLinks.querySelectorAll("a").forEach(a => a.addEventListener("click", () => navLinks.classList.remove("open")));
+</script>
+</body>
+</html>
