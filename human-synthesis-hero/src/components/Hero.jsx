@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import ParticleField from './ParticleField.jsx'
+import FilmGrain from './FilmGrain.jsx'
 import { useScrollStage } from '../hooks/useScrollStage.js'
 import { STAGES } from '../data/stages.js'
 
@@ -32,6 +33,7 @@ export default function Hero() {
     <div ref={containerRef} className="relative h-[400vh] bg-black">
       <div className="fixed inset-0 h-screen w-screen overflow-hidden bg-black">
         <ParticleField stageFloatRef={stageFloatRef} isTouch={isTouch} />
+        <FilmGrain />
 
         {/* Top-left pinned label */}
         <div className="pointer-events-none absolute left-5 top-5 z-20 text-xs font-medium uppercase tracking-widest text-white/90 md:left-8 md:top-8 md:text-sm">

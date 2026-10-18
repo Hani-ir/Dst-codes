@@ -85,14 +85,53 @@ const STAR_FAR_Z = -45
 const STAR_NEAR_Z = 4.3
 const STAR_SPEED = 5.5
 
+// Custom shader (instead of PointsMaterial) so each star can carry its
+// own size and fade independently of the others, and so the glow is
+// baked straight into the blend instead of a separate bloom pass:
+// - gl_PointSize grows and alpha falls as a star nears the camera,
+//   faking a depth-of-field "circle of confusion" — stars in the
+//   distance stay small and sharp, the ones about to pass by become
+//   big soft blurred discs, exactly like camera bokeh.
+// - Additive blending + a soft radial falloff in the fragment shader
+//   gives every star a glowing halo (a cheap stand-in for real bloom)
+//   without a postprocessing pass.
+const STAR_VERTEX_SHADER = `
+  attribute float aBaseSize;
+  uniform float uOpacity;
+  uniform float uPixelRatio;
+  varying float vAlpha;
+  void main() {
+    vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+    float camDist = max(-mvPosition.z, 0.001);
+    // 0 far away (sharp) -> 1 within ~8 units of the camera (blurred).
+    float proximity = clamp(1.0 - (camDist - 1.0) / 8.0, 0.0, 1.0);
+    float size = aBaseSize * (1.0 + proximity * 6.0);
+    gl_PointSize = size * uPixelRatio * (300.0 / camDist);
+    vAlpha = uOpacity * (1.0 - proximity * 0.55);
+    gl_Position = projectionMatrix * mvPosition;
+  }
+`
+const STAR_FRAGMENT_SHADER = `
+  uniform vec3 uColor;
+  varying float vAlpha;
+  void main() {
+    vec2 uv = gl_PointCoord - vec2(0.5);
+    float d = length(uv) * 2.0;
+    float falloff = smoothstep(1.0, 0.0, d);
+    gl_FragColor = vec4(uColor, falloff * vAlpha);
+  }
+`
+
 function Starfield({ stageFloatRef }) {
-  const count = 1600
+  const count = 2600
   const matRef = useRef()
   const geoRef = useRef()
 
   const positions = useRef()
+  const baseSizes = useRef()
   if (!positions.current) {
     const arr = new Float32Array(count * 3)
+    const sizes = new Float32Array(count)
     for (let i = 0; i < count; i++) {
       const angle = Math.random() * Math.PI * 2
       const radius = 0.3 + Math.random() * 10
@@ -100,14 +139,23 @@ function Starfield({ stageFloatRef }) {
       arr[i * 3 + 1] = Math.sin(angle) * radius
       // Staggered start depths so stars don't all arrive at once.
       arr[i * 3 + 2] = STAR_FAR_Z + Math.random() * (STAR_NEAR_Z - STAR_FAR_Z)
+      sizes[i] = 0.035 + Math.random() * 0.05
     }
     positions.current = arr
+    baseSizes.current = sizes
   }
 
   const colorA = useMemo(() => new THREE.Color(), [])
   const colorB = useMemo(() => new THREE.Color(), [])
   const current = useMemo(() => new THREE.Color(), [])
-  const dotTexture = useMemo(() => createDotTexture(), [])
+  const uniforms = useMemo(
+    () => ({
+      uColor: { value: new THREE.Color('#2dd4bf') },
+      uOpacity: { value: 0.3 },
+      uPixelRatio: { value: typeof window !== 'undefined' ? Math.min(window.devicePixelRatio, 2) : 1 },
+    }),
+    [],
+  )
 
   useFrame((_, delta) => {
     const stageFloat = stageFloatRef.current
@@ -118,14 +166,12 @@ function Starfield({ stageFloatRef }) {
     colorA.set(STAGES[stageIdx].starColor)
     colorB.set(STAGES[nextIdx].starColor)
     current.copy(colorA).lerp(colorB, localT)
+    uniforms.uColor.value.copy(current)
 
-    if (matRef.current) {
-      matRef.current.color.copy(current)
-      // Visible from stage 1 onward (floor of 0.4) and ramps to full by
-      // mid stage-2, boosted ~50% over the original faint-haze levels.
-      const density = Math.min(1, Math.max(0.4, stageFloat / 1.3))
-      matRef.current.opacity = Math.min(1, 0.18 + density * 0.9)
-    }
+    // Visible from frame one (floor of 0.65, boosted well past the
+    // original faint-haze levels) and ramps to full by mid stage-2.
+    const density = Math.min(1, Math.max(0.65, stageFloat / 1.3))
+    uniforms.uOpacity.value = Math.min(1, 0.28 + density * 0.72)
 
     const pos = positions.current
     for (let i = 0; i < count; i++) {
@@ -146,17 +192,16 @@ function Starfield({ stageFloatRef }) {
     <points>
       <bufferGeometry ref={geoRef}>
         <bufferAttribute attach="attributes-position" args={[positions.current, 3]} />
+        <bufferAttribute attach="attributes-aBaseSize" args={[baseSizes.current, 1]} />
       </bufferGeometry>
-      <pointsMaterial
+      <shaderMaterial
         ref={matRef}
-        map={dotTexture}
-        alphaTest={0.01}
-        size={0.045}
-        color="#2dd4bf"
+        uniforms={uniforms}
+        vertexShader={STAR_VERTEX_SHADER}
+        fragmentShader={STAR_FRAGMENT_SHADER}
         transparent
-        opacity={0.18}
-        sizeAttenuation
         depthWrite={false}
+        blending={THREE.AdditiveBlending}
       />
     </points>
   )
@@ -212,8 +257,14 @@ function Particles({ stageFloatRef, isTouch }) {
   }, [neighborPairs])
 
   const positions = useRef(new Float32Array(shapes[0]))
-  const pointsGeoRef = useRef()
+  const particleGeometry = useMemo(() => {
+    const geo = new THREE.BufferGeometry()
+    geo.setAttribute('position', new THREE.BufferAttribute(positions.current, 3))
+    return geo
+  }, [])
+  const dotTexture = useMemo(() => createDotTexture(), [])
   const materialRef = useRef()
+  const glowMaterialRef = useRef()
   const lineAGeoRef = useRef()
   const lineBGeoRef = useRef()
   const lineMatARef = useRef()
@@ -300,9 +351,7 @@ function Particles({ stageFloatRef, isTouch }) {
       pos[ix + 2] += (tz - pos[ix + 2]) * 0.08
     }
 
-    if (pointsGeoRef.current) {
-      pointsGeoRef.current.attributes.position.needsUpdate = true
-    }
+    particleGeometry.attributes.position.needsUpdate = true
 
     colorA.set(STAGES[stageIdx].colorHot)
     colorB.set(STAGES[nextIdx].colorHot)
@@ -313,6 +362,14 @@ function Particles({ stageFloatRef, isTouch }) {
       const opA = POINT_OPACITY[stageIdx]
       const opB = POINT_OPACITY[nextIdx]
       materialRef.current.opacity = opA + (opB - opA) * localT
+    }
+    // A bigger, softer, additively-blended copy of the same points gives
+    // the shape a glowing halo (a cheap stand-in for a real bloom pass).
+    if (glowMaterialRef.current) {
+      glowMaterialRef.current.color.copy(currentColor)
+      const glowA = POINT_OPACITY[stageIdx] * 0.5
+      const glowB = POINT_OPACITY[nextIdx] * 0.5
+      glowMaterialRef.current.opacity = glowA + (glowB - glowA) * localT
     }
 
     const opacityA = (1 - localT) * LINE_OPACITY[stageIdx]
@@ -353,12 +410,26 @@ function Particles({ stageFloatRef, isTouch }) {
 
   return (
     <group>
-      <points>
-        <bufferGeometry ref={pointsGeoRef}>
-          <bufferAttribute attach="attributes-position" args={[positions.current, 3]} />
-        </bufferGeometry>
+      <points geometry={particleGeometry}>
+        <pointsMaterial
+          ref={glowMaterialRef}
+          map={dotTexture}
+          alphaTest={0.001}
+          size={(isTouch ? 0.028 : 0.022) * 4.5}
+          color="#2dd4bf"
+          transparent
+          depthWrite={false}
+          opacity={0.4}
+          sizeAttenuation
+          blending={THREE.AdditiveBlending}
+        />
+      </points>
+
+      <points geometry={particleGeometry}>
         <pointsMaterial
           ref={materialRef}
+          map={dotTexture}
+          alphaTest={0.01}
           size={isTouch ? 0.028 : 0.022}
           color="#2dd4bf"
           transparent
