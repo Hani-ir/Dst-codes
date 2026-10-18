@@ -124,6 +124,15 @@ export function generateSkull(count) {
   return pts
 }
 
+// A 30% reduction in VOLUME is a ~11.2% reduction in each linear
+// dimension (volume scales with the cube of length), so the scale
+// factor is the cube root of the remaining 70%, not 0.7 itself.
+export const SHAPE_SCALE = Math.cbrt(0.7)
+
 export function generateAllShapes(count) {
-  return [generateFace(count), generateCell(count), generateBone(count), generateSkull(count)]
+  const shapes = [generateFace(count), generateCell(count), generateBone(count), generateSkull(count)]
+  for (const shape of shapes) {
+    for (let i = 0; i < shape.length; i++) shape[i] *= SHAPE_SCALE
+  }
+  return shapes
 }

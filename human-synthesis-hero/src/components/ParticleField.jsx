@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
-import { generateAllShapes } from '../data/shapes.js'
+import { generateAllShapes, SHAPE_SCALE } from '../data/shapes.js'
 import { STAGES } from '../data/stages.js'
 
 const PARTICLE_COUNT_DESKTOP = 6000
@@ -11,7 +11,9 @@ const LINE_SAMPLE = 700
 // tangle, so far fewer of the sampled particles get wired into lines there.
 const LINE_SAMPLE_PER_STAGE = [700, 700, 260, 380]
 const MAX_NEIGHBORS = [3, 3, 2, 2]
-const NEIGHBOR_MAX_DIST = [0.5, 0.55, 0.4, 0.42]
+// Distance thresholds scale down with the shapes themselves so the
+// line/plexus density stays visually proportional at the smaller size.
+const NEIGHBOR_MAX_DIST = [0.5, 0.55, 0.4, 0.42].map((d) => d * SHAPE_SCALE)
 
 // Point visibility is lower for the sparser constellation-style stages
 // (bone, skull) so the connecting lines carry more of the silhouette.
@@ -227,7 +229,7 @@ function Particles({ stageFloatRef, isTouch }) {
     }
     return dir
   }, [count])
-  const burstAmount = isTouch ? 1.1 : 1.7
+  const burstAmount = (isTouch ? 1.1 : 1.7) * SHAPE_SCALE
 
   const sampleIndices = useMemo(() => {
     const size = Math.min(LINE_SAMPLE, count)
