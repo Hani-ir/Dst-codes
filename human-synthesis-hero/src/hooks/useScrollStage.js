@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
+import { STAGES } from '../data/stages.js'
 
-const STAGE_COUNT = 4
+const STAGE_COUNT = STAGES.length
 
 /**
  * Single source of truth for scroll progress.

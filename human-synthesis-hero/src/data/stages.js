@@ -42,4 +42,16 @@ export const STAGES = [
     colorHot: '#f0abfc',
     starColor: '#a855f7',
   },
+  {
+    key: 'tank',
+    headline: ['سیستم ذرات', 'مخزن'],
+    caption: 'DST LUBESTATION',
+    description:
+      'بدنه‌ی دوطبقه، دریچه‌ی تهویه و درپوش‌های مخزن، از دل همان ذراتی بازسازی می‌شود که پیش‌تر صورت، سلول، استخوان و جمجمه را ساختند.',
+    showDescription: true,
+    rtl: true,
+    color: '#f59e0b',
+    colorHot: '#fde047',
+    starColor: '#f59e0b',
+  },
 ]

@@ -28,9 +28,10 @@ export default function Hero() {
   stageFloatRef.current = progress * stageCount
 
   const stage = STAGES[stageIndex]
+  const isRtl = Boolean(stage.rtl)
 
   return (
-    <div ref={containerRef} className="relative h-[400vh] bg-black">
+    <div ref={containerRef} className="relative bg-black" style={{ height: `${stageCount * 100}vh` }}>
       <div className="fixed inset-0 h-screen w-screen overflow-hidden bg-black">
         <ParticleField stageFloatRef={stageFloatRef} isTouch={isTouch} />
         <FilmGrain />
@@ -105,6 +106,7 @@ export default function Hero() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -30 }}
                 transition={{ duration: 0.6, ease: 'easeOut' }}
+                dir={isRtl ? 'rtl' : 'ltr'}
                 className="max-w-3xl"
               >
                 <h1
@@ -133,7 +135,12 @@ export default function Hero() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -15 }}
                   transition={{ duration: 0.6, ease: 'easeOut', delay: 0.1 }}
-                  className="max-w-full text-left text-[13px] leading-relaxed text-white/80 md:max-w-[320px] md:text-right md:text-sm"
+                  dir={isRtl ? 'rtl' : 'ltr'}
+                  className={
+                    isRtl
+                      ? 'max-w-full text-right text-[13px] leading-relaxed text-white/80 md:max-w-[320px] md:text-sm'
+                      : 'max-w-full text-left text-[13px] leading-relaxed text-white/80 md:max-w-[320px] md:text-right md:text-sm'
+                  }
                 >
                   {stage.description}
                 </motion.p>

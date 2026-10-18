@@ -124,6 +124,189 @@ export function generateSkull(count) {
   return pts
 }
 
+// --- Tank (box) helpers --------------------------------------------
+
+/** A random point on the surface of an axis-aligned box, face-area weighted. */
+function sampleBoxSurface(w, h, d, cx, cy, cz) {
+  const areas = [h * d, h * d, w * d, w * d, w * h, w * h]
+  const total = areas[0] + areas[1] + areas[2] + areas[3] + areas[4] + areas[5]
+  let r = Math.random() * total
+  let face = 0
+  for (; face < 5; face++) {
+    if (r < areas[face]) break
+    r -= areas[face]
+  }
+  const hw = w / 2
+  const hh = h / 2
+  const hd = d / 2
+  const u = Math.random() - 0.5
+  const v = Math.random() - 0.5
+  let x = 0
+  let y = 0
+  let z = 0
+  if (face === 0) { x = -hw; y = u * h; z = v * d }
+  else if (face === 1) { x = hw; y = u * h; z = v * d }
+  else if (face === 2) { y = -hh; x = u * w; z = v * d }
+  else if (face === 3) { y = hh; x = u * w; z = v * d }
+  else if (face === 4) { z = -hd; x = u * w; y = v * h }
+  else { z = hd; x = u * w; y = v * h }
+  return [cx + x, cy + y, cz + z]
+}
+
+/** A random point along one of a box's 12 edges — traces a crisp wireframe. */
+function sampleBoxEdges(w, h, d, cx, cy, cz) {
+  const hw = w / 2
+  const hh = h / 2
+  const hd = d / 2
+  const corners = [
+    [-hw, -hh, -hd], [hw, -hh, -hd], [hw, -hh, hd], [-hw, -hh, hd],
+    [-hw, hh, -hd], [hw, hh, -hd], [hw, hh, hd], [-hw, hh, hd],
+  ]
+  const edges = [
+    [0, 1], [1, 2], [2, 3], [3, 0],
+    [4, 5], [5, 6], [6, 7], [7, 4],
+    [0, 4], [1, 5], [2, 6], [3, 7],
+  ]
+  const e = edges[Math.floor(Math.random() * edges.length)]
+  const t = Math.random()
+  const a = corners[e[0]]
+  const b = corners[e[1]]
+  return [
+    cx + a[0] + (b[0] - a[0]) * t,
+    cy + a[1] + (b[1] - a[1]) * t,
+    cz + a[2] + (b[2] - a[2]) * t,
+  ]
+}
+
+/** A point on the outline of a rectangle on the box's top (+Y) face. */
+function sampleRectOutlineTop(w, d, cx, cy, cz) {
+  const hw = w / 2
+  const hd = d / 2
+  const perim = 2 * (w + d)
+  let r = Math.random() * perim
+  let x
+  let z
+  if (r < w) { x = -hw + r; z = -hd }
+  else if ((r -= w) < d) { x = hw; z = -hd + r }
+  else if ((r -= d) < w) { x = hw - r; z = hd }
+  else { r -= w; x = -hw; z = hd - r }
+  return [cx + x, cy, cz + z]
+}
+
+/** Rotate a point around Y then X — a fixed isometric tilt so the box
+ * reads as a 3D object (top + two side faces visible) even though the
+ * camera itself never moves. */
+function isoRotate(x, y, z, radY, radX) {
+  const cosY = Math.cos(radY)
+  const sinY = Math.sin(radY)
+  const x1 = x * cosY + z * sinY
+  const z1 = -x * sinY + z * cosY
+  const cosX = Math.cos(radX)
+  const sinX = Math.sin(radX)
+  const y2 = y * cosX - z1 * sinX
+  const z2 = y * sinX + z1 * cosX
+  return [x1, y2, z2]
+}
+
+/**
+ * Stage 5: the DST Lubestation tank — a two-tier rounded cabinet (a
+ * wider "DST" box on top of a narrower "LUBESTATION" pedestal), a round
+ * side vent, two top lids, and a small stacked-bar logo mark on the
+ * front face. Built as box wireframe + surface dust + feature details,
+ * then tilted into a fixed isometric angle so every face reads clearly
+ * from the hero's static front-on camera.
+ */
+export function generateTank(count) {
+  const pts = new Float32Array(count * 3)
+
+  // Local box-space dimensions (pre-rotation). S matches the box's
+  // overall footprint to the other shapes' ~1.3-1.7 unit radius scale
+  // (the box dimensions below are full widths, not radii, so they'd
+  // otherwise read about half the size of the face/skull/bone clouds).
+  const S = 1.8
+  const topW = 1.6 * S, topH = 0.9 * S, topD = 1.1 * S
+  const topCX = 0, topCY = 0.25 * S, topCZ = 0
+  const baseW = 1.4 * S, baseH = 0.5 * S, baseD = 0.95 * S
+  const baseCX = 0, baseCY = -0.45 * S, baseCZ = 0
+
+  const ventCX = -topW / 2 - 0.018, ventCY = topCY, ventCZ = 0.09 * S
+  const ventR = 0.32 * S
+
+  const radY = (35 * Math.PI) / 180
+  const radX = (-18 * Math.PI) / 180
+
+  for (let i = 0; i < count; i++) {
+    const r = Math.random()
+    let x, y, z
+
+    if (r < 0.8) {
+      // Edge wireframe — the crispest cue that this is a box.
+      ;[x, y, z] = Math.random() < 0.65
+        ? sampleBoxEdges(topW, topH, topD, topCX, topCY, topCZ)
+        : sampleBoxEdges(baseW, baseH, baseD, baseCX, baseCY, baseCZ)
+    } else if (r < 0.84) {
+      // Surface dust for a touch of volume/texture.
+      ;[x, y, z] = sampleBoxSurface(topW, topH, topD, topCX, topCY, topCZ)
+    } else if (r < 0.87) {
+      ;[x, y, z] = sampleBoxSurface(baseW, baseH, baseD, baseCX, baseCY, baseCZ)
+    } else if (r < 0.93) {
+      // Round side vent: ring + spokes + a square backing panel.
+      const vr = Math.random()
+      if (vr < 0.5) {
+        const a = Math.random() * Math.PI * 2
+        x = ventCX
+        y = ventCY + Math.cos(a) * ventR
+        z = ventCZ + Math.sin(a) * ventR
+      } else if (vr < 0.8) {
+        const a = Math.floor(Math.random() * 4) * (Math.PI / 2) + Math.PI / 8
+        const t = Math.random()
+        x = ventCX
+        y = ventCY + Math.cos(a) * ventR * t
+        z = ventCZ + Math.sin(a) * ventR * t
+      } else {
+        const hw = 0.42 * S, hh = 0.42 * S
+        const u = Math.random() - 0.5
+        const v = Math.random() - 0.5
+        const edge = Math.random() < 0.5
+        x = ventCX - 0.015 * S
+        y = ventCY + (edge ? u * hw * 2 : (Math.random() < 0.5 ? -hh : hh))
+        z = ventCZ + (edge ? (Math.random() < 0.5 ? -hw : hw) : v * hw * 2)
+      }
+    } else if (r < 0.97) {
+      // Two raised lids on the top face, each an outlined rectangle.
+      const leftLid = Math.random() < 0.55
+      const lw = (leftLid ? 0.62 : 0.58) * S
+      const ld = (leftLid ? 0.56 : 0.5) * S
+      const lcx = (leftLid ? -0.4 : 0.45) * S
+      const lcz = (leftLid ? -0.1 : 0.08) * S
+      ;[x, y, z] = sampleRectOutlineTop(lw, ld, topCX + lcx, topCY + topH / 2 + 0.01, topCZ + lcz)
+      if (Math.random() < 0.12) {
+        // A small handle loop above the left lid.
+        const a = Math.PI * 0.2 + Math.random() * Math.PI * 0.6
+        x = topCX + lcx + Math.cos(a) * 0.12 * S
+        y = topCY + topH / 2 + 0.05 * S + Math.sin(a) * 0.08 * S
+        z = topCZ + lcz + 0.3 * S
+      }
+    } else {
+      // Small stacked-bar logo mark on the front face.
+      const level = Math.floor(Math.random() * 6)
+      const barW = (0.05 + level * 0.035) * S
+      const bx = -0.35 * S + (Math.random() - 0.5) * barW
+      const by = topCY - 0.15 * S + (5 - level) * 0.055 * S
+      x = bx
+      y = by
+      z = -topD / 2 - 0.015
+    }
+
+    const [rx, ry, rz] = isoRotate(x, y, z, radY, radX)
+    pts[i * 3] = rx
+    pts[i * 3 + 1] = ry
+    pts[i * 3 + 2] = rz
+  }
+
+  return pts
+}
+
 // Cumulative volume reduction: 30% first, then another 50% on top of
 // that (0.7 * 0.5 = 0.35 of the original volume remains). Volume scales
 // with the cube of linear length, so the scale factor applied to each
@@ -132,7 +315,13 @@ export function generateSkull(count) {
 export const SHAPE_SCALE = Math.cbrt(0.7 * 0.5)
 
 export function generateAllShapes(count) {
-  const shapes = [generateFace(count), generateCell(count), generateBone(count), generateSkull(count)]
+  const shapes = [
+    generateFace(count),
+    generateCell(count),
+    generateBone(count),
+    generateSkull(count),
+    generateTank(count),
+  ]
   for (const shape of shapes) {
     for (let i = 0; i < shape.length; i++) shape[i] *= SHAPE_SCALE
   }

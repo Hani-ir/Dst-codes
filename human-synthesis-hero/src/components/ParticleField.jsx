@@ -4,21 +4,27 @@ import * as THREE from 'three'
 import { generateAllShapes, SHAPE_SCALE } from '../data/shapes.js'
 import { STAGES } from '../data/stages.js'
 
+const LAST_STAGE = STAGES.length - 1
+
 const PARTICLE_COUNT_DESKTOP = 6000
 const PARTICLE_COUNT_MOBILE = 2000
 const LINE_SAMPLE = 700
 // Bone and skull are meant to read as sparse constellations, not a dense
 // tangle, so far fewer of the sampled particles get wired into lines there.
-const LINE_SAMPLE_PER_STAGE = [700, 700, 260, 380]
-const MAX_NEIGHBORS = [3, 3, 2, 2]
+const LINE_SAMPLE_PER_STAGE = [700, 700, 260, 380, 700]
+const MAX_NEIGHBORS = [3, 3, 2, 2, 2]
 // Distance thresholds scale down with the shapes themselves so the
 // line/plexus density stays visually proportional at the smaller size.
-const NEIGHBOR_MAX_DIST = [0.5, 0.55, 0.4, 0.42].map((d) => d * SHAPE_SCALE)
+const NEIGHBOR_MAX_DIST = [0.5, 0.55, 0.4, 0.42, 0.14].map((d) => d * SHAPE_SCALE)
 
 // Point visibility is lower for the sparser constellation-style stages
 // (bone, skull) so the connecting lines carry more of the silhouette.
-const POINT_OPACITY = [0.9, 0.82, 0.32, 0.3]
-const LINE_OPACITY = [0.3, 0.5, 0.6, 0.5]
+const POINT_OPACITY = [0.9, 0.82, 0.32, 0.3, 0.55]
+const LINE_OPACITY = [0.3, 0.5, 0.6, 0.5, 0.8]
+// The tank's "boxness" comes from crisp wireframe edges, which the
+// glow halo (great for the organic shapes) instead blurs into a
+// shapeless cloud — so the glow is almost entirely switched off there.
+const GLOW_MULTIPLIER = [1, 1, 1, 1, 0.12]
 
 // Three.js's default PointsMaterial renders square sprites, which reads
 // as a glitch once sizeAttenuation blows a point up on approach. A soft
@@ -161,8 +167,8 @@ function Starfield({ stageFloatRef }) {
 
   useFrame((_, delta) => {
     const stageFloat = stageFloatRef.current
-    const stageIdx = Math.min(3, Math.floor(stageFloat))
-    const nextIdx = Math.min(3, stageIdx + 1)
+    const stageIdx = Math.min(LAST_STAGE, Math.floor(stageFloat))
+    const nextIdx = Math.min(LAST_STAGE, stageIdx + 1)
     const localT = stageFloat - stageIdx
 
     colorA.set(STAGES[stageIdx].starColor)
@@ -302,8 +308,8 @@ function Particles({ stageFloatRef, isTouch }) {
   useFrame((_, delta) => {
     clock.current += delta
     const stageFloat = stageFloatRef.current
-    const stageIdx = Math.min(3, Math.floor(stageFloat))
-    const nextIdx = Math.min(3, stageIdx + 1)
+    const stageIdx = Math.min(LAST_STAGE, Math.floor(stageFloat))
+    const nextIdx = Math.min(LAST_STAGE, stageIdx + 1)
     const localT = stageFloat - stageIdx
 
     if (Math.abs(stageFloat - lastStageFloat.current) > 0.0008) {
@@ -369,8 +375,8 @@ function Particles({ stageFloatRef, isTouch }) {
     // the shape a glowing halo (a cheap stand-in for a real bloom pass).
     if (glowMaterialRef.current) {
       glowMaterialRef.current.color.copy(currentColor)
-      const glowA = POINT_OPACITY[stageIdx] * 0.5
-      const glowB = POINT_OPACITY[nextIdx] * 0.5
+      const glowA = POINT_OPACITY[stageIdx] * 0.5 * GLOW_MULTIPLIER[stageIdx]
+      const glowB = POINT_OPACITY[nextIdx] * 0.5 * GLOW_MULTIPLIER[nextIdx]
       glowMaterialRef.current.opacity = glowA + (glowB - glowA) * localT
     }
 
