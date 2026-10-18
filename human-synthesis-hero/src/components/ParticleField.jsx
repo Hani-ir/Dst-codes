@@ -62,6 +62,7 @@ function buildNeighborPairs(shape, sampleIndices, maxDist, maxNeighbors) {
 function Starfield({ stageFloatRef }) {
   const count = 1600
   const matRef = useRef()
+  const starsRef = useRef()
 
   const positions = useMemo(() => {
     const arr = new Float32Array(count * 3)
@@ -80,7 +81,7 @@ function Starfield({ stageFloatRef }) {
   const colorB = useMemo(() => new THREE.Color(), [])
   const current = useMemo(() => new THREE.Color(), [])
 
-  useFrame(() => {
+  useFrame((_, delta) => {
     const stageFloat = stageFloatRef.current
     const stageIdx = Math.min(3, Math.floor(stageFloat))
     const nextIdx = Math.min(3, stageIdx + 1)
@@ -93,13 +94,22 @@ function Starfield({ stageFloatRef }) {
     if (matRef.current) {
       matRef.current.color.copy(current)
       // Density ramps up across stage 1 into stage 2, then holds.
+      // Boosted 50% over the original (0.12 base / 0.6 range) so the
+      // starfield reads clearly instead of as a faint haze.
       const density = Math.min(1, Math.max(0, (stageFloat - 0.3) / 1.3))
-      matRef.current.opacity = 0.12 + density * 0.6
+      matRef.current.opacity = Math.min(1, 0.18 + density * 0.9)
+    }
+
+    // Slow ambient drift so the starfield's motion is visible even when
+    // the viewer isn't scrolling.
+    if (starsRef.current) {
+      starsRef.current.rotation.y += delta * 0.02
+      starsRef.current.rotation.x += delta * 0.006
     }
   })
 
   return (
-    <points>
+    <points ref={starsRef}>
       <bufferGeometry>
         <bufferAttribute attach="attributes-position" args={[positions, 3]} />
       </bufferGeometry>
@@ -108,7 +118,7 @@ function Starfield({ stageFloatRef }) {
         size={0.045}
         color="#2dd4bf"
         transparent
-        opacity={0.12}
+        opacity={0.18}
         sizeAttenuation
         depthWrite={false}
       />
