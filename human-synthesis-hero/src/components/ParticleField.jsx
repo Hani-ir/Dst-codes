@@ -122,6 +122,22 @@ function Particles({ stageFloatRef, isTouch }) {
 
   const shapes = useMemo(() => generateAllShapes(count), [count])
 
+  // A fixed, per-particle outward direction used to "explode" a shape
+  // apart and let the next one "implode" back together from that same
+  // scattered point, instead of lerping straight from A to B.
+  const explodeDir = useMemo(() => {
+    const dir = new Float32Array(count * 3)
+    for (let i = 0; i < count; i++) {
+      const theta = Math.random() * Math.PI * 2
+      const phi = Math.acos(2 * Math.random() - 1)
+      dir[i * 3] = Math.sin(phi) * Math.cos(theta)
+      dir[i * 3 + 1] = Math.sin(phi) * Math.sin(theta)
+      dir[i * 3 + 2] = Math.cos(phi)
+    }
+    return dir
+  }, [count])
+  const burstAmount = isTouch ? 1.1 : 1.7
+
   const sampleIndices = useMemo(() => {
     const size = Math.min(LINE_SAMPLE, count)
     return Array.from({ length: size }, (_, k) => Math.floor((k * count) / size))
@@ -206,11 +222,17 @@ function Particles({ stageFloatRef, isTouch }) {
     const repulseRadius = isTouch ? 0 : 1.1
     const repulseStrength = 0.6
 
+    // Explode outward at the midpoint of the transition, then let the
+    // next shape converge back in from that same scattered point —
+    // zero at both ends (t=0 is exactly A, t=1 is exactly B), peaking
+    // at t=0.5, so forward and backward scroll both stay continuous.
+    const burst = Math.sin(Math.PI * localT) * burstAmount
+
     for (let i = 0; i < count; i++) {
       const ix = i * 3
-      const gx = shapeA[ix] + (shapeB[ix] - shapeA[ix]) * localT
-      const gy = shapeA[ix + 1] + (shapeB[ix + 1] - shapeA[ix + 1]) * localT
-      const gz = shapeA[ix + 2] + (shapeB[ix + 2] - shapeA[ix + 2]) * localT
+      const gx = shapeA[ix] + (shapeB[ix] - shapeA[ix]) * localT + explodeDir[ix] * burst
+      const gy = shapeA[ix + 1] + (shapeB[ix + 1] - shapeA[ix + 1]) * localT + explodeDir[ix + 1] * burst
+      const gz = shapeA[ix + 2] + (shapeB[ix + 2] - shapeA[ix + 2]) * localT + explodeDir[ix + 2] * burst
 
       let tx = gx * (1 + breathe)
       let ty = gy * (1 + breathe)
