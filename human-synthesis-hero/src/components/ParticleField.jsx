@@ -18,6 +18,23 @@ const NEIGHBOR_MAX_DIST = [0.5, 0.55, 0.4, 0.42]
 const POINT_OPACITY = [0.9, 0.82, 0.32, 0.3]
 const LINE_OPACITY = [0.3, 0.5, 0.6, 0.5]
 
+// Three.js's default PointsMaterial renders square sprites, which reads
+// as a glitch once sizeAttenuation blows a point up on approach. A soft
+// radial-gradient texture makes every point (stars included) a round,
+// softly glowing dot instead.
+function createDotTexture() {
+  const canvas = document.createElement('canvas')
+  canvas.width = canvas.height = 64
+  const ctx = canvas.getContext('2d')
+  const gradient = ctx.createRadialGradient(32, 32, 0, 32, 32, 32)
+  gradient.addColorStop(0, 'rgba(255,255,255,1)')
+  gradient.addColorStop(0.4, 'rgba(255,255,255,0.7)')
+  gradient.addColorStop(1, 'rgba(255,255,255,0)')
+  ctx.fillStyle = gradient
+  ctx.fillRect(0, 0, 64, 64)
+  return new THREE.CanvasTexture(canvas)
+}
+
 function buildNeighborPairs(shape, sampleIndices, maxDist, maxNeighbors) {
   const n = sampleIndices.length
   const maxDist2 = maxDist * maxDist
@@ -59,27 +76,38 @@ function buildNeighborPairs(shape, sampleIndices, maxDist, maxNeighbors) {
   return out
 }
 
+// Stars travel from deep behind the particle shape (FAR_Z) toward the
+// camera/viewer (NEAR_Z), then loop back. Their (x, y) offset from the
+// center axis stays fixed while z closes in — under perspective that
+// alone makes them radiate outward from screen-center to the edges as
+// they approach, the classic "flying through space" look.
+const STAR_FAR_Z = -45
+const STAR_NEAR_Z = 4.3
+const STAR_SPEED = 5.5
+
 function Starfield({ stageFloatRef }) {
   const count = 1600
   const matRef = useRef()
-  const starsRef = useRef()
+  const geoRef = useRef()
 
-  const positions = useMemo(() => {
+  const positions = useRef()
+  if (!positions.current) {
     const arr = new Float32Array(count * 3)
     for (let i = 0; i < count; i++) {
-      const r = 6 + Math.random() * 15
-      const theta = Math.random() * Math.PI * 2
-      const phi = Math.acos(2 * Math.random() - 1)
-      arr[i * 3] = r * Math.sin(phi) * Math.cos(theta)
-      arr[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta)
-      arr[i * 3 + 2] = -Math.abs(r * Math.cos(phi)) - 2
+      const angle = Math.random() * Math.PI * 2
+      const radius = 0.3 + Math.random() * 10
+      arr[i * 3] = Math.cos(angle) * radius
+      arr[i * 3 + 1] = Math.sin(angle) * radius
+      // Staggered start depths so stars don't all arrive at once.
+      arr[i * 3 + 2] = STAR_FAR_Z + Math.random() * (STAR_NEAR_Z - STAR_FAR_Z)
     }
-    return arr
-  }, [])
+    positions.current = arr
+  }
 
   const colorA = useMemo(() => new THREE.Color(), [])
   const colorB = useMemo(() => new THREE.Color(), [])
   const current = useMemo(() => new THREE.Color(), [])
+  const dotTexture = useMemo(() => createDotTexture(), [])
 
   useFrame((_, delta) => {
     const stageFloat = stageFloatRef.current
@@ -93,28 +121,36 @@ function Starfield({ stageFloatRef }) {
 
     if (matRef.current) {
       matRef.current.color.copy(current)
-      // Density ramps up across stage 1 into stage 2, then holds.
-      // Boosted 50% over the original (0.12 base / 0.6 range) so the
-      // starfield reads clearly instead of as a faint haze.
-      const density = Math.min(1, Math.max(0, (stageFloat - 0.3) / 1.3))
+      // Visible from stage 1 onward (floor of 0.4) and ramps to full by
+      // mid stage-2, boosted ~50% over the original faint-haze levels.
+      const density = Math.min(1, Math.max(0.4, stageFloat / 1.3))
       matRef.current.opacity = Math.min(1, 0.18 + density * 0.9)
     }
 
-    // Slow ambient drift so the starfield's motion is visible even when
-    // the viewer isn't scrolling.
-    if (starsRef.current) {
-      starsRef.current.rotation.y += delta * 0.02
-      starsRef.current.rotation.x += delta * 0.006
+    const pos = positions.current
+    for (let i = 0; i < count; i++) {
+      const iz = i * 3 + 2
+      pos[iz] += STAR_SPEED * delta
+      if (pos[iz] > STAR_NEAR_Z) {
+        const angle = Math.random() * Math.PI * 2
+        const radius = 0.3 + Math.random() * 10
+        pos[i * 3] = Math.cos(angle) * radius
+        pos[i * 3 + 1] = Math.sin(angle) * radius
+        pos[iz] = STAR_FAR_Z
+      }
     }
+    if (geoRef.current) geoRef.current.attributes.position.needsUpdate = true
   })
 
   return (
-    <points ref={starsRef}>
-      <bufferGeometry>
-        <bufferAttribute attach="attributes-position" args={[positions, 3]} />
+    <points>
+      <bufferGeometry ref={geoRef}>
+        <bufferAttribute attach="attributes-position" args={[positions.current, 3]} />
       </bufferGeometry>
       <pointsMaterial
         ref={matRef}
+        map={dotTexture}
+        alphaTest={0.01}
         size={0.045}
         color="#2dd4bf"
         transparent
