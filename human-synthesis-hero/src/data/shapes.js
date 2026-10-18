@@ -124,10 +124,12 @@ export function generateSkull(count) {
   return pts
 }
 
-// A 30% reduction in VOLUME is a ~11.2% reduction in each linear
-// dimension (volume scales with the cube of length), so the scale
-// factor is the cube root of the remaining 70%, not 0.7 itself.
-export const SHAPE_SCALE = Math.cbrt(0.7)
+// Cumulative volume reduction: 30% first, then another 50% on top of
+// that (0.7 * 0.5 = 0.35 of the original volume remains). Volume scales
+// with the cube of linear length, so the scale factor applied to each
+// coordinate is the cube root of the remaining fraction, not the
+// fraction itself.
+export const SHAPE_SCALE = Math.cbrt(0.7 * 0.5)
 
 export function generateAllShapes(count) {
   const shapes = [generateFace(count), generateCell(count), generateBone(count), generateSkull(count)]
