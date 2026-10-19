@@ -395,12 +395,7 @@ export function generateTankWireframe() {
 export const SHAPE_SCALE = Math.cbrt(0.7 * 0.5)
 
 export function generateAllShapes(count) {
-  const shapes = [
-    generateFace(count),
-    generateCell(count),
-    generateBone(count),
-    generateTank(count),
-  ]
+  const shapes = [generateFace(count), generateCell(count), generateBone(count)]
   for (const shape of shapes) {
     for (let i = 0; i < shape.length; i++) shape[i] *= SHAPE_SCALE
   }

@@ -36,26 +36,6 @@ export default function Hero() {
         <ParticleField stageFloatRef={stageFloatRef} isTouch={isTouch} />
         <FilmGrain />
 
-        {/* Reference artwork, shown verbatim on the tank stage */}
-        <AnimatePresence>
-          {stage.key === 'tank' && (
-            <motion.div
-              key="tank-reference-image"
-              initial={{ opacity: 0, scale: 0.96 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.96 }}
-              transition={{ duration: 0.6, ease: 'easeOut' }}
-              className="pointer-events-none absolute inset-0 z-10 flex items-start justify-center px-6 pt-20 md:pt-24"
-            >
-              <img
-                src="/images/tank-reference.jpg"
-                alt="DST Lubestation tank reference artwork"
-                className="max-h-[42vh] w-auto max-w-[80vw] rounded-2xl shadow-2xl md:max-h-[48vh]"
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
-
         {/* Top-left pinned label */}
         <div className="pointer-events-none absolute left-5 top-5 z-20 text-xs font-medium uppercase tracking-widest text-white/90 md:left-8 md:top-8 md:text-sm">
           The World
