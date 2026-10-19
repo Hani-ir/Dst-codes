@@ -239,17 +239,17 @@ export function generateTank(count) {
     const r = Math.random()
     let x, y, z
 
-    if (r < 0.8) {
+    if (r < 0.35) {
       // Edge wireframe — the crispest cue that this is a box.
       ;[x, y, z] = Math.random() < 0.65
         ? sampleBoxEdges(topW, topH, topD, topCX, topCY, topCZ)
         : sampleBoxEdges(baseW, baseH, baseD, baseCX, baseCY, baseCZ)
-    } else if (r < 0.84) {
+    } else if (r < 0.62) {
       // Surface dust for a touch of volume/texture.
       ;[x, y, z] = sampleBoxSurface(topW, topH, topD, topCX, topCY, topCZ)
-    } else if (r < 0.87) {
+    } else if (r < 0.78) {
       ;[x, y, z] = sampleBoxSurface(baseW, baseH, baseD, baseCX, baseCY, baseCZ)
-    } else if (r < 0.93) {
+    } else if (r < 0.88) {
       // Round side vent: ring + spokes + a square backing panel.
       const vr = Math.random()
       if (vr < 0.5) {
@@ -272,7 +272,7 @@ export function generateTank(count) {
         y = ventCY + (edge ? u * hw * 2 : (Math.random() < 0.5 ? -hh : hh))
         z = ventCZ + (edge ? (Math.random() < 0.5 ? -hw : hw) : v * hw * 2)
       }
-    } else if (r < 0.97) {
+    } else if (r < 0.96) {
       // Two raised lids on the top face, each an outlined rectangle.
       const leftLid = Math.random() < 0.55
       const lw = (leftLid ? 0.62 : 0.58) * S
@@ -305,6 +305,86 @@ export function generateTank(count) {
   }
 
   return pts
+}
+
+// --- Tank wireframe (exact, not randomly sampled) ------------------
+// generateTank() above scatters points near the box for a dusty, morph-
+// able cloud, but random nearest-neighbor connections can't draw a
+// clean edge. This builds literal straight line segments — the box's
+// 12+12 edges, the vent as a true circle, the two lids as exact
+// rectangles, and the logo as stacked bars — for a crisp, legible
+// overlay instead of an abstract blob.
+function pushBoxEdgeSegments(out, w, h, d, cx, cy, cz) {
+  const hw = w / 2, hh = h / 2, hd = d / 2
+  const c = [
+    [-hw, -hh, -hd], [hw, -hh, -hd], [hw, -hh, hd], [-hw, -hh, hd],
+    [-hw, hh, -hd], [hw, hh, -hd], [hw, hh, hd], [-hw, hh, hd],
+  ]
+  const edges = [
+    [0, 1], [1, 2], [2, 3], [3, 0],
+    [4, 5], [5, 6], [6, 7], [7, 4],
+    [0, 4], [1, 5], [2, 6], [3, 7],
+  ]
+  for (const [a, b] of edges) {
+    out.push(cx + c[a][0], cy + c[a][1], cz + c[a][2])
+    out.push(cx + c[b][0], cy + c[b][1], cz + c[b][2])
+  }
+}
+
+function pushRectOutlineSegments(out, w, d, cx, cy, cz) {
+  const hw = w / 2, hd = d / 2
+  const c = [[-hw, -hd], [hw, -hd], [hw, hd], [-hw, hd]]
+  for (let i = 0; i < 4; i++) {
+    const a = c[i], b = c[(i + 1) % 4]
+    out.push(cx + a[0], cy, cz + a[1])
+    out.push(cx + b[0], cy, cz + b[1])
+  }
+}
+
+function pushCircleSegments(out, cx, cy, cz, r, segments) {
+  for (let i = 0; i < segments; i++) {
+    const a0 = (i / segments) * Math.PI * 2
+    const a1 = ((i + 1) / segments) * Math.PI * 2
+    out.push(cx, cy + Math.cos(a0) * r, cz + Math.sin(a0) * r)
+    out.push(cx, cy + Math.cos(a1) * r, cz + Math.sin(a1) * r)
+  }
+}
+
+/** Exact line-segment geometry for the tank — see the comment above. */
+export function generateTankWireframe() {
+  const S = 1.8
+  const topW = 1.6 * S, topH = 0.9 * S, topD = 1.1 * S
+  const topCX = 0, topCY = 0.25 * S, topCZ = 0
+  const baseW = 1.4 * S, baseH = 0.5 * S, baseD = 0.95 * S
+  const baseCX = 0, baseCY = -0.45 * S, baseCZ = 0
+  const ventCX = -topW / 2 - 0.018, ventCY = topCY, ventCZ = 0.09 * S
+  const ventR = 0.32 * S
+  const radY = (35 * Math.PI) / 180
+  const radX = (-18 * Math.PI) / 180
+
+  const segs = []
+  pushBoxEdgeSegments(segs, topW, topH, topD, topCX, topCY, topCZ)
+  pushBoxEdgeSegments(segs, baseW, baseH, baseD, baseCX, baseCY, baseCZ)
+  pushCircleSegments(segs, ventCX, ventCY, ventCZ, ventR, 28)
+  pushRectOutlineSegments(segs, 0.62 * S, 0.56 * S, topCX - 0.4 * S, topCY + topH / 2 + 0.01, topCZ - 0.1 * S)
+  pushRectOutlineSegments(segs, 0.58 * S, 0.5 * S, topCX + 0.45 * S, topCY + topH / 2 + 0.01, topCZ + 0.08 * S)
+  for (let level = 0; level < 6; level++) {
+    const barW = (0.05 + level * 0.035) * S
+    const y = topCY - 0.15 * S + (5 - level) * 0.055 * S
+    const z = -topD / 2 - 0.015
+    segs.push(-barW / 2, y, z, barW / 2, y, z)
+  }
+
+  const out = new Float32Array(segs.length)
+  for (let i = 0; i < segs.length; i += 3) {
+    const [rx, ry, rz] = isoRotate(segs[i], segs[i + 1], segs[i + 2], radY, radX)
+    // Matches generateAllShapes' post-generation scale so this overlay
+    // lines up with the dust cloud from generateTank().
+    out[i] = rx * SHAPE_SCALE
+    out[i + 1] = ry * SHAPE_SCALE
+    out[i + 2] = rz * SHAPE_SCALE
+  }
+  return out
 }
 
 // Cumulative volume reduction: 30% first, then another 50% on top of

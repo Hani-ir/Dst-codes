@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
-import { generateAllShapes, SHAPE_SCALE } from '../data/shapes.js'
+import { generateAllShapes, generateTankWireframe, SHAPE_SCALE } from '../data/shapes.js'
 import { STAGES } from '../data/stages.js'
 
 const LAST_STAGE = STAGES.length - 1
@@ -11,20 +11,20 @@ const PARTICLE_COUNT_MOBILE = 2000
 const LINE_SAMPLE = 700
 // Bone and skull are meant to read as sparse constellations, not a dense
 // tangle, so far fewer of the sampled particles get wired into lines there.
-const LINE_SAMPLE_PER_STAGE = [700, 700, 260, 380, 700]
+const LINE_SAMPLE_PER_STAGE = [700, 700, 260, 380, 380]
 const MAX_NEIGHBORS = [3, 3, 2, 2, 2]
 // Distance thresholds scale down with the shapes themselves so the
 // line/plexus density stays visually proportional at the smaller size.
-const NEIGHBOR_MAX_DIST = [0.5, 0.55, 0.4, 0.42, 0.14].map((d) => d * SHAPE_SCALE)
+const NEIGHBOR_MAX_DIST = [0.5, 0.55, 0.4, 0.42, 0.3].map((d) => d * SHAPE_SCALE)
 
 // Point visibility is lower for the sparser constellation-style stages
 // (bone, skull) so the connecting lines carry more of the silhouette.
-const POINT_OPACITY = [0.9, 0.82, 0.32, 0.3, 0.55]
-const LINE_OPACITY = [0.3, 0.5, 0.6, 0.5, 0.8]
-// The tank's "boxness" comes from crisp wireframe edges, which the
-// glow halo (great for the organic shapes) instead blurs into a
-// shapeless cloud — so the glow is almost entirely switched off there.
-const GLOW_MULTIPLIER = [1, 1, 1, 1, 0.12]
+const POINT_OPACITY = [0.9, 0.82, 0.32, 0.3, 0.3]
+const LINE_OPACITY = [0.3, 0.5, 0.6, 0.5, 0.2]
+// The tank's crisp readability comes from the exact TankWireframe
+// overlay below, not from this dust cloud's glow — toned down so it
+// doesn't blur into a shapeless cloud or fight the clean lines.
+const GLOW_MULTIPLIER = [1, 1, 1, 1, 0.3]
 
 // Three.js's default PointsMaterial renders square sprites, which reads
 // as a glitch once sizeAttenuation blows a point up on approach. A soft
@@ -464,6 +464,42 @@ function Particles({ stageFloatRef, isTouch }) {
   )
 }
 
+// The tank is the one stage that needs to read as precise geometry, not
+// an organic blob — buildNeighborPairs' nearest-neighbor connections
+// can't draw a clean edge from randomly-scattered points. This renders
+// the box's exact edges, the vent as a true circle, the lids as exact
+// rectangles, and the logo bars as straight lines, fading in only while
+// the tank stage is active (entering from skull, or settled on it).
+function TankWireframe({ stageFloatRef }) {
+  const positions = useMemo(() => generateTankWireframe(), [])
+  const matRef = useRef()
+
+  useFrame(() => {
+    const stageFloat = stageFloatRef.current
+    const stageIdx = Math.min(LAST_STAGE, Math.floor(stageFloat))
+    const nextIdx = Math.min(LAST_STAGE, stageIdx + 1)
+    const localT = stageFloat - stageIdx
+
+    let opacity = 0
+    if (stageIdx === LAST_STAGE) opacity = 1
+    else if (nextIdx === LAST_STAGE) opacity = localT
+
+    if (matRef.current) {
+      matRef.current.opacity = opacity * 0.85
+      matRef.current.color.set(STAGES[LAST_STAGE].colorHot)
+    }
+  })
+
+  return (
+    <lineSegments>
+      <bufferGeometry>
+        <bufferAttribute attach="attributes-position" args={[positions, 3]} />
+      </bufferGeometry>
+      <lineBasicMaterial ref={matRef} color={STAGES[LAST_STAGE].colorHot} transparent opacity={0} />
+    </lineSegments>
+  )
+}
+
 export default function ParticleField({ stageFloatRef, isTouch }) {
   return (
     <Canvas
@@ -476,6 +512,7 @@ export default function ParticleField({ stageFloatRef, isTouch }) {
       <ambientLight intensity={0.4} />
       <Starfield stageFloatRef={stageFloatRef} />
       <Particles stageFloatRef={stageFloatRef} isTouch={isTouch} />
+      <TankWireframe stageFloatRef={stageFloatRef} />
     </Canvas>
   )
 }
