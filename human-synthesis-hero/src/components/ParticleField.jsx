@@ -485,7 +485,10 @@ function TankWireframe({ stageFloatRef }) {
     else if (nextIdx === LAST_STAGE) opacity = localT
 
     if (matRef.current) {
-      matRef.current.opacity = opacity * 0.85
+      // Dimmer than before: the real reference photo now does the
+      // "what does this look like" job, so the wireframe is a subtle
+      // glowing echo under it rather than a competing shape.
+      matRef.current.opacity = opacity * 0.35
       matRef.current.color.set(STAGES[LAST_STAGE].colorHot)
     }
   })
