@@ -32,22 +32,11 @@ export const STAGES = [
     starColor: '#fb7185',
   },
   {
-    key: 'skull',
-    headline: ['Vessel Of', 'The Mind'],
-    caption: 'THE HUMAN CRANIAL SKELETON',
-    description:
-      'The majestic cranial architecture shields our consciousness and houses our thoughts. Within this secure neural dome, memory and form merge into an intricate cosmic crown of glowing starlight.',
-    showDescription: true,
-    color: '#a855f7',
-    colorHot: '#f0abfc',
-    starColor: '#a855f7',
-  },
-  {
     key: 'tank',
     headline: ['سیستم ذرات', 'مخزن'],
     caption: 'DST LUBESTATION',
     description:
-      'بدنه‌ی دوطبقه، دریچه‌ی تهویه و درپوش‌های مخزن، از دل همان ذراتی بازسازی می‌شود که پیش‌تر صورت، سلول، استخوان و جمجمه را ساختند.',
+      'بدنه‌ی دوطبقه، دریچه‌ی تهویه و درپوش‌های مخزن، از دل همان ذراتی بازسازی می‌شود که پیش‌تر صورت، سلول و استخوان را ساختند.',
     showDescription: true,
     rtl: true,
     color: '#f59e0b',

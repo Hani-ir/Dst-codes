@@ -399,7 +399,6 @@ export function generateAllShapes(count) {
     generateFace(count),
     generateCell(count),
     generateBone(count),
-    generateSkull(count),
     generateTank(count),
   ]
   for (const shape of shapes) {

@@ -11,20 +11,20 @@ const PARTICLE_COUNT_MOBILE = 2000
 const LINE_SAMPLE = 700
 // Bone and skull are meant to read as sparse constellations, not a dense
 // tangle, so far fewer of the sampled particles get wired into lines there.
-const LINE_SAMPLE_PER_STAGE = [700, 700, 260, 380, 380]
-const MAX_NEIGHBORS = [3, 3, 2, 2, 2]
+const LINE_SAMPLE_PER_STAGE = [700, 700, 260, 380]
+const MAX_NEIGHBORS = [3, 3, 2, 2]
 // Distance thresholds scale down with the shapes themselves so the
 // line/plexus density stays visually proportional at the smaller size.
-const NEIGHBOR_MAX_DIST = [0.5, 0.55, 0.4, 0.42, 0.3].map((d) => d * SHAPE_SCALE)
+const NEIGHBOR_MAX_DIST = [0.5, 0.55, 0.4, 0.3].map((d) => d * SHAPE_SCALE)
 
 // Point visibility is lower for the sparser constellation-style stages
 // (bone, skull) so the connecting lines carry more of the silhouette.
-const POINT_OPACITY = [0.9, 0.82, 0.32, 0.3, 0.3]
-const LINE_OPACITY = [0.3, 0.5, 0.6, 0.5, 0.2]
+const POINT_OPACITY = [0.9, 0.82, 0.32, 0.3]
+const LINE_OPACITY = [0.3, 0.5, 0.6, 0.2]
 // The tank's crisp readability comes from the exact TankWireframe
 // overlay below, not from this dust cloud's glow — toned down so it
 // doesn't blur into a shapeless cloud or fight the clean lines.
-const GLOW_MULTIPLIER = [1, 1, 1, 1, 0.3]
+const GLOW_MULTIPLIER = [1, 1, 1, 0.3]
 
 // Three.js's default PointsMaterial renders square sprites, which reads
 // as a glitch once sizeAttenuation blows a point up on approach. A soft
