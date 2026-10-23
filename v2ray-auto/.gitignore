@@ -1,0 +1,6 @@
+# Never commit real settings (contains the subscription link) or outputs
+config.json
+*.log
+v2rayn-inspect.txt
+dist/
+build/
