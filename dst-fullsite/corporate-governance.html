@@ -163,13 +163,13 @@ body:not(.unlocked) #gate{display:flex}
     <div class="fourgrid">
       <div id="stcardWrap"></div>
       <div id="mapWrap"></div>
-      <div class="p4">
+      <div class="p4 no-equalize" id="chartCard">
         <h3 class="h" style="font-size:14px">مصرف کل کشور (هفتگی، لیتر)</h3>
         <div id="chart"></div>
       </div>
-      <div class="p4">
+      <div class="p4 no-equalize" id="rankCard">
         <h3 class="h" style="font-size:14px">رتبه‌بندی جایگاه‌ها بر اساس مصرف هفتگی</h3>
-        <div class="rank" id="rank"></div>
+        <div class="rank" id="rank" style="overflow-y:auto"></div>
       </div>
     </div>
   </section>
@@ -292,7 +292,7 @@ function mapSvg(s){
 // only when the grid is actually 2 columns (matches the 700px CSS breakpoint) — on a
 // single mobile column, forcing equal height just pads the shorter cards with empty space
 function equalizeFour(){
-  var els=[].slice.call(document.querySelectorAll('.fourgrid > *'));
+  var els=[].slice.call(document.querySelectorAll('.fourgrid > *:not(.no-equalize)'));
   if(!els.length) return;
   els.forEach(function(e){ e.style.minHeight=''; });
   if(window.innerWidth<=700) return;
