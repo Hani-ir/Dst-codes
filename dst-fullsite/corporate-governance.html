@@ -471,7 +471,7 @@ if (canvas && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
   const geo = new THREE.BufferGeometry();
   geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
   const mat = new THREE.PointsMaterial({
-    size: 0.05,
+    size: 0.02,
     map: dotTexture,
     color: new THREE.Color(1.0, 0.86, 0.4),
     transparent: true,
@@ -492,8 +492,8 @@ if (canvas && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
   addEventListener("resize", onResize);
 
   function frame() {
-    points.rotation.y += 0.112 / 60;
-    points.rotation.x += 0.04032 / 60;
+    points.rotation.y += 0.056 / 60;
+    points.rotation.x += 0.02016 / 60;
     renderer.render(scene, camera);
     requestAnimationFrame(frame);
   }
