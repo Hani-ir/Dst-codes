@@ -1,34 +1,29 @@
 /*
  * LUBESTATION — client-side login gate for the static demo pages.
- * Uses the SAME Supabase project/auth as the real app (phone + password,
- * profiles.is_active, user_permissions.permission). Credentials and
- * access levels are managed entirely from the app's /admin → کاربران page;
- * nothing is hardcoded here.
+ * Backed by an independent Supabase project (own project, own login,
+ * NOT the Lovable app). Phone + password; role stored in public.profiles.role
+ * ("admin" or "viewer"). Credentials/roles are managed directly in that
+ * Supabase project (Table editor → profiles), nothing is hardcoded here.
  *
  * NOTE: this only covers/hides the page until login succeeds — it is a
  * UX gate for an internal demo, not a hard security boundary (the HTML
  * is still present in the DOM/served file). Real protection for private
- * data must stay in Supabase RLS, same as the production app.
+ * data stays in Supabase RLS, same as any production app.
  */
 (function () {
   "use strict";
 
-  var SUPABASE_URL = "https://c--2feaee82-5872-4a6b-9c61-1edae9f2e61d-prod.lovable.cloud";
-  var SUPABASE_ANON_KEY = "sb_publishable_wMutLvW-Nd51WkWJ_pf4-A_L4N27o9-";
-  var SESSION_KEY = "lubestation_gate_session_v1";
+  var SUPABASE_URL = "https://iakxsrlspieukyvgmhof.supabase.co";
+  var SUPABASE_ANON_KEY = "sb_publishable_lNNvvyYnBEmdt_Ii0Cy0tw_FCXChjZH";
+  var SESSION_KEY = "lubestation_gate_session_v2";
+  var EMAIL_DOMAIN = "@barandigital.ir";
 
   var ROLE_LABELS = {
     admin: "مدیر سیستم",
-    maintenance: "تعمیرات و نگهداری",
-    dealership_isfahan: "نمایندگی اصفهان",
-    dealership_shahrekord: "نمایندگی شهرکرد",
-    dealership_yazd: "نمایندگی یزد",
-    dealership_shiraz: "نمایندگی شیراز",
-    dealership_tehran: "نمایندگی تهران",
-    dealership_sirjan: "نمایندگی سیرجان"
+    viewer: "بازدیدکننده"
   };
 
-  function phoneToEmail(phone) { return phone + "@lubestation.local"; }
+  function phoneToEmail(phone) { return phone + EMAIL_DOMAIN; }
   function isValidPhone(phone) { return /^09\d{9}$/.test(phone); }
 
   function currentScript() {
@@ -38,13 +33,11 @@
     })();
   }
 
-  var requiredRolesAttr = (currentScript().getAttribute("data-roles") || "any").trim();
-  var requiredRoles = requiredRolesAttr === "any" ? null : requiredRolesAttr.split(",").map(function (s) { return s.trim(); });
+  var requiredRole = (currentScript().getAttribute("data-roles") || "any").trim();
 
-  function hasAccess(roles) {
-    if (roles.indexOf("admin") !== -1) return true; // admin always allowed
-    if (!requiredRoles) return roles.length > 0; // "any" = any active account
-    return roles.some(function (r) { return requiredRoles.indexOf(r) !== -1; });
+  function hasAccess(role) {
+    if (requiredRole === "any") return !!role;
+    return role === requiredRole || role === "admin";
   }
 
   function injectStyles() {
@@ -86,7 +79,7 @@
     wrap.innerHTML =
       '<div class="card">' +
         '<h2>ورود به سامانه LUBESTATION</h2>' +
-        '<p class="sub">دسترسی به این صفحه نیاز به ورود دارد. رمز عبور و سطح دسترسی شما در پنل مدیریت تعیین می‌شود.</p>' +
+        '<p class="sub">دسترسی به این صفحه نیاز به ورود دارد. رمز عبور و سطح دسترسی شما در دیتابیس سامانه تعیین می‌شود.</p>' +
         '<label for="lsPhone">شماره موبایل</label>' +
         '<input id="lsPhone" type="tel" inputmode="numeric" placeholder="09xxxxxxxxx" autocomplete="username" maxlength="11">' +
         '<label for="lsPass">رمز عبور</label>' +
@@ -128,27 +121,21 @@
           }
           var token = res.body.access_token;
           var userId = res.body.user && res.body.user.id;
-          return Promise.all([
-            fetch(SUPABASE_URL + "/rest/v1/profiles?id=eq." + userId + "&select=id,phone,full_name,is_active", {
-              headers: { apikey: SUPABASE_ANON_KEY, Authorization: "Bearer " + token }
-            }).then(function (r) { return r.json(); }),
-            fetch(SUPABASE_URL + "/rest/v1/user_permissions?user_id=eq." + userId + "&select=permission", {
-              headers: { apikey: SUPABASE_ANON_KEY, Authorization: "Bearer " + token }
-            }).then(function (r) { return r.json(); })
-          ]).then(function (results) {
-            var profile = results[0] && results[0][0];
-            var perms = (results[1] || []).map(function (row) { return row.permission; });
-            if (!profile || !profile.is_active) {
-              setErr("حساب شما غیرفعال است. با مدیر سیستم تماس بگیرید.");
+          return fetch(SUPABASE_URL + "/rest/v1/profiles?id=eq." + userId + "&select=phone,full_name,role", {
+            headers: { apikey: SUPABASE_ANON_KEY, Authorization: "Bearer " + token }
+          }).then(function (r) { return r.json(); }).then(function (rows) {
+            var profile = rows && rows[0];
+            if (!profile) {
+              setErr("پروفایل کاربری یافت نشد.");
               btn.disabled = false; btn.textContent = "ورود";
               return;
             }
-            if (!hasAccess(perms)) {
+            if (!hasAccess(profile.role)) {
               setErr("شما مجوز دسترسی به این صفحه را ندارید.");
               btn.disabled = false; btn.textContent = "ورود";
               return;
             }
-            var sessionData = { token: token, name: profile.full_name, phone: profile.phone, roles: perms, at: Date.now() };
+            var sessionData = { token: token, name: profile.full_name, phone: profile.phone, role: profile.role, at: Date.now() };
             try { sessionStorage.setItem(SESSION_KEY, JSON.stringify(sessionData)); } catch (e) {}
             reveal(sessionData);
           });
@@ -163,6 +150,32 @@
     passEl.addEventListener("keydown", function (e) { if (e.key === "Enter") submit(); });
   }
 
+  function loadLiveTanks(token) {
+    var mount = document.getElementById("lsLiveData");
+    if (!mount) return;
+    fetch(SUPABASE_URL + "/rest/v1/demo_tanks?select=name,product,capacity_l,level_l,threshold_l&order=id", {
+      headers: { apikey: SUPABASE_ANON_KEY, Authorization: "Bearer " + token }
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (rows) {
+        if (!Array.isArray(rows) || !rows.length) return;
+        var html = '<div style="margin:18px 0;padding:14px 16px;border:1px solid rgba(34,211,238,.3);' +
+          'border-radius:12px;background:rgba(34,211,238,.06);font-family:\'Vazirmatn\',sans-serif;direction:rtl">' +
+          '<div style="font-size:12px;color:#22d3ee;font-weight:800;margin-bottom:8px">' +
+          'داده زنده از دیتابیس (Supabase)</div>';
+        rows.forEach(function (t) {
+          var pct = Math.round((t.level_l / t.capacity_l) * 100);
+          html += '<div style="font-size:12.5px;color:#f5f7f7;padding:4px 0;display:flex;justify-content:space-between;gap:12px">' +
+            '<span>' + t.name + ' — ' + t.product + '</span>' +
+            '<span>' + t.level_l.toLocaleString('fa-IR') + ' / ' + t.capacity_l.toLocaleString('fa-IR') + ' لیتر (' + pct + '٪)</span>' +
+            '</div>';
+        });
+        html += '</div>';
+        mount.innerHTML = html;
+      })
+      .catch(function () {});
+  }
+
   function reveal(sessionData) {
     document.documentElement.style.overflow = "";
     var gate = document.getElementById("lsGate");
@@ -170,13 +183,19 @@
 
     var badge = document.createElement("div");
     badge.id = "lsBadge";
-    var roleLabel = ROLE_LABELS[sessionData.roles[0]] || sessionData.roles[0] || "";
+    var roleLabel = ROLE_LABELS[sessionData.role] || sessionData.role || "";
     badge.innerHTML = '<span><b>' + (sessionData.name || sessionData.phone) + '</b> · ' + roleLabel + '</span><button id="lsLogout">خروج</button>';
     document.body.appendChild(badge);
     badge.querySelector("#lsLogout").addEventListener("click", function () {
       try { sessionStorage.removeItem(SESSION_KEY); } catch (e) {}
       location.reload();
     });
+
+    var mount = document.createElement("div");
+    mount.id = "lsLiveData";
+    var anchor = document.body.firstChild;
+    document.body.insertBefore(mount, anchor);
+    loadLiveTanks(sessionData.token);
   }
 
   function init() {
@@ -186,7 +205,7 @@
     if (raw) {
       try {
         var data = JSON.parse(raw);
-        if (data && data.roles && hasAccess(data.roles) && Date.now() - data.at < 1000 * 60 * 60 * 8) {
+        if (data && hasAccess(data.role) && Date.now() - data.at < 1000 * 60 * 60 * 8) {
           reveal(data);
           return;
         }
