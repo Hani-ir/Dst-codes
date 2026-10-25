@@ -129,6 +129,8 @@ body:not(.unlocked) #gate{display:flex}
 </style>
 
 
+<canvas id="heroSphere" aria-hidden="true" style="position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;display:block"></canvas>
+
 <div class="wrap">
   <header class="top">
     <div class="logorow">
@@ -420,4 +422,82 @@ equalizeFour();
 
 <script src="auth-gate.js?v=4" data-roles="admin" data-live-panel="false"></script>
 <!-- auth-gate v2: independent Supabase project, phone+password, role in public.profiles.role -->
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
+</script>
+<script type="module">
+/* Biggest rotating particle sphere from the home-page hero, ported standalone for this page
+   (same ellipsoid, same gold additive-blend particle look, continuous rotation, no stages). */
+import * as THREE from "three";
+
+const canvas = document.getElementById("heroSphere");
+if (canvas && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, innerWidth / innerHeight, 0.1, 100);
+  camera.position.z = 6;
+
+  const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+  renderer.setPixelRatio(Math.min(2, devicePixelRatio || 1));
+  renderer.setSize(innerWidth, innerHeight);
+
+  const dotTexture = (() => {
+    const c = document.createElement("canvas");
+    c.width = c.height = 64;
+    const ctx = c.getContext("2d");
+    const grad = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+    grad.addColorStop(0, "rgba(255,255,255,1)");
+    grad.addColorStop(0.5, "rgba(255,255,255,0.6)");
+    grad.addColorStop(1, "rgba(255,255,255,0)");
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(32, 32, 32, 0, Math.PI * 2);
+    ctx.fill();
+    return new THREE.CanvasTexture(c);
+  })();
+
+  const RADIUS = 2.53;
+  const COUNT = 2457;
+  let seed = 918273;
+  const rnd = () => { seed = (seed * 1103515245 + 12345) % 2147483648; return seed / 2147483648; };
+  const pos = new Float32Array(COUNT * 3);
+  for (let i = 0; i < COUNT; i++) {
+    const theta = rnd() * Math.PI * 2;
+    const phi = Math.acos(2 * rnd() - 1);
+    const r = RADIUS + (rnd() - 0.5) * 0.12;
+    pos[i * 3] = Math.sin(phi) * Math.cos(theta) * r;
+    pos[i * 3 + 1] = Math.sin(phi) * Math.sin(theta) * r;
+    pos[i * 3 + 2] = Math.cos(phi) * r;
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+  const mat = new THREE.PointsMaterial({
+    size: 0.014,
+    map: dotTexture,
+    color: new THREE.Color(1.0, 0.86, 0.4),
+    transparent: true,
+    opacity: 0.55,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+    sizeAttenuation: true,
+  });
+  const points = new THREE.Points(geo, mat);
+  points.scale.set(1.0, 1.4, 1.15);
+  scene.add(points);
+
+  function onResize() {
+    camera.aspect = innerWidth / innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(innerWidth, innerHeight);
+  }
+  addEventListener("resize", onResize);
+
+  function frame() {
+    points.rotation.y += 0.112 / 60;
+    points.rotation.x += 0.04032 / 60;
+    renderer.render(scene, camera);
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+}
+</script>
 </body></html>
