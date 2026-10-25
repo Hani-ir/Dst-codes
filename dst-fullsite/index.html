@@ -114,7 +114,7 @@
 
   /* right-side vertical nav (moved out of the header in v3) */
   .side-nav{
-    position:absolute;right:24px;top:20%;transform:translateY(-50%);z-index:10;
+    position:absolute;right:24px;top:20%;transform:translateY(-50%);z-index:52;
     display:none;flex-direction:column;align-items:flex-end;gap:20px;
     opacity:0;transition:opacity .8s ease .5s;
   }
@@ -124,6 +124,7 @@
     display:flex;align-items:center;gap:10px;
     font-size:11.2px;font-weight:500;text-transform:uppercase;letter-spacing:.15em;
     color:color-mix(in oklab, var(--foreground) 80%, transparent);transition:color .2s ease;
+    padding:8px 2px;margin:-8px -2px;cursor:pointer;position:relative;z-index:1;
   }
   .side-nav a:hover{ color:var(--foreground) }
   .side-nav a .dot, .mobile-nav a .dot{
@@ -168,6 +169,7 @@
     display:flex;align-items:center;gap:10px;
     font-size:15px;font-weight:500;text-transform:uppercase;letter-spacing:.12em;
     color:var(--foreground);
+    padding:10px 4px;margin:-10px -4px;cursor:pointer;position:relative;z-index:1;
   }
   @media (min-width:768px){ .nav-toggle, .mobile-nav{ display:none !important } }
 
