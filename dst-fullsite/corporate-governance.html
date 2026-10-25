@@ -139,7 +139,7 @@ body:not(.unlocked) #gate{display:flex}
     <div class="toprow">
       <div class="ttl">
         <h1>داشبورد مدیریت مخازن · LUBESTATION</h1>
-        <p><span class="badge">سطح ۱</span> فقط مدیریت ارشد · نمای کلی همه جایگاه‌ها</p>
+        <p>فقط مدیریت ارشد · نمای کلی همه جایگاه‌ها</p>
       </div>
       <a class="homelink" href="index.html">
         <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v9h14v-9"/></svg>
@@ -434,7 +434,7 @@ const canvas = document.getElementById("heroSphere");
 if (canvas && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(45, innerWidth / innerHeight, 0.1, 100);
-  camera.position.z = 6;
+  camera.position.z = 4.8;
 
   const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
   renderer.setPixelRatio(Math.min(2, devicePixelRatio || 1));
@@ -471,11 +471,11 @@ if (canvas && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
   const geo = new THREE.BufferGeometry();
   geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
   const mat = new THREE.PointsMaterial({
-    size: 0.014,
+    size: 0.05,
     map: dotTexture,
     color: new THREE.Color(1.0, 0.86, 0.4),
     transparent: true,
-    opacity: 0.55,
+    opacity: 0.8,
     depthWrite: false,
     blending: THREE.AdditiveBlending,
     sizeAttenuation: true,
