@@ -142,16 +142,10 @@ body:not(.unlocked) #gate{display:flex}
         <h1>داشبورد مدیریت مخازن · LUBESTATION</h1>
         <p><span class="badge">سطح ۱</span> فقط مدیریت ارشد · نمای کلی همه جایگاه‌ها</p>
       </div>
-      <div style="display:flex;gap:10px;align-items:center">
-        <a class="homelink" href="https://look-see-adventure.lovable.app/login" target="_blank" rel="noopener">
-          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/></svg>
-          ورود به داشبورد کامل
-        </a>
-        <a class="homelink" href="index.html">
-          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v9h14v-9"/></svg>
-          HOME
-        </a>
-      </div>
+      <a class="homelink" href="index.html">
+        <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v9h14v-9"/></svg>
+        HOME
+      </a>
     </div>
   </header>
 
@@ -490,6 +484,6 @@ equalizeFour();
 })();
 </script>
 
-<script src="auth-gate.js?v=3" data-roles="admin"></script>
+<script src="auth-gate.js?v=4" data-roles="admin" data-live-panel="false"></script>
 <!-- auth-gate v2: independent Supabase project, phone+password, role in public.profiles.role -->
 </body></html>
