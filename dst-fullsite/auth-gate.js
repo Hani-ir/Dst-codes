@@ -34,6 +34,7 @@
   }
 
   var requiredRole = (currentScript().getAttribute("data-roles") || "any").trim();
+  var showLivePanel = currentScript().getAttribute("data-live-panel") !== "false";
 
   function hasAccess(role) {
     if (requiredRole === "any") return !!role;
@@ -191,11 +192,13 @@
       location.reload();
     });
 
-    var mount = document.createElement("div");
-    mount.id = "lsLiveData";
-    var anchor = document.body.firstChild;
-    document.body.insertBefore(mount, anchor);
-    loadLiveTanks(sessionData.token);
+    if (showLivePanel) {
+      var mount = document.createElement("div");
+      mount.id = "lsLiveData";
+      var anchor = document.body.firstChild;
+      document.body.insertBefore(mount, anchor);
+      loadLiveTanks(sessionData.token);
+    }
   }
 
   function init() {
