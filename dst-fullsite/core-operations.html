@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Core Operations — DST</title>
+<meta name="description" content="معرفی شرکت DST و محصولات روانکار دیزل.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0c0c;
+    --cyan:#22d3ee;
+    --green:#22c55e;
+    --ink:#f5f7f7;
+    --muted:#9aa5a3;
+    --line:rgba(255,255,255,.10);
+    --panel:rgba(255,255,255,.04);
+    --radius:14px;
+    --maxw:1100px;
+  }
+  *,*::before,*::after{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;background:var(--bg);color:var(--ink);
+    font-family:"Vazirmatn",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit;text-decoration:none}
+
+  header.top{
+    position:sticky;top:0;z-index:20;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:16px 24px;background:rgba(10,12,12,.85);backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--line);
+  }
+  header.top .word{font-weight:800;font-size:18px;letter-spacing:.02em}
+  header.top .word b{color:var(--green)}
+  .home-btn{
+    display:flex;align-items:center;gap:6px;
+    padding:8px 14px;border:1px solid var(--line);border-radius:999px;
+    font-size:13px;color:var(--muted);
+  }
+  .home-btn:hover{color:var(--ink);border-color:var(--cyan)}
+
+  main{max-width:var(--maxw);margin:0 auto;padding:48px 24px 96px}
+
+  .kicker{
+    display:inline-flex;align-items:center;gap:8px;font-size:12.5px;
+    letter-spacing:.08em;color:var(--green);text-transform:uppercase;margin-bottom:14px;
+  }
+  .kicker .dot{width:6px;height:6px;border-radius:50%;background:var(--green);
+    box-shadow:0 0 8px 2px rgba(34,197,94,.6)}
+  h1{font-size:clamp(28px,5vw,44px);line-height:1.25;margin:0 0 16px;font-weight:800}
+  h1 span{color:var(--cyan)}
+  .lede{color:var(--muted);font-size:17px;line-height:1.9;max-width:720px;margin:0 0 48px}
+
+  h2.h{font-size:20px;font-weight:700;margin:56px 0 20px;padding-right:12px;border-right:3px solid var(--green)}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+  .card{
+    background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+    padding:22px;
+  }
+  .card .n{font-size:13px;color:var(--cyan);margin-bottom:8px;font-weight:700}
+  .card h3{font-size:16px;margin:0 0 8px;font-weight:700}
+  .card p{font-size:13.5px;color:var(--muted);line-height:1.8;margin:0}
+
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px;margin-top:24px}
+  .stat{text-align:center;padding:20px 12px;border:1px solid var(--line);border-radius:var(--radius)}
+  .stat b{display:block;font-size:26px;color:var(--green);margin-bottom:4px}
+  .stat span{font-size:12.5px;color:var(--muted)}
+
+  .note{
+    margin-top:56px;padding:16px 18px;border:1px dashed var(--line);border-radius:var(--radius);
+    font-size:13px;color:var(--muted);line-height:1.8;display:flex;gap:10px;
+  }
+  .note b{color:var(--ink)}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="word">DST · <b>Lubestation</b></div>
+  <a class="home-btn" href="index.html">
+    <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v9h14v-9"/></svg>
+    خانه
+  </a>
+</header>
+
+<main>
+  <span class="kicker"><span class="dot"></span>Core Operations</span>
+  <h1>DST — <span>اولین برند تخصصی دیزل</span> در ایران</h1>
+  <p class="lede">
+    DST زیرمجموعه گروه صنعتی تاش است و تمرکز اصلی آن تولید و تأمین انواع روانکارهای مورد نیاز موتورهای دیزل —
+    از روغن موتور و گیربکس تا روغن هیدرولیک و ضد یخ — برای ناوگان‌های سنگین، معادن، واحدهای حمل‌ونقل و نمایندگی‌های خودرو است.
+    LUBESTATION بازوی توزیع هوشمند همین محصولات به‌صورت فله (بالک) در نمایندگی‌های سراسر کشور است.
+  </p>
+
+  <h2 class="h">محصولات</h2>
+  <div class="grid">
+    <div class="card">
+      <div class="n">01</div>
+      <h3>روغن موتور دیزل</h3>
+      <p>فرمولاسیون‌های اختصاصی برای موتورهای سنگین دیزلی، مطابق با استانداردهای بین‌المللی مصرف سوخت و عمر موتور.</p>
+    </div>
+    <div class="card">
+      <div class="n">02</div>
+      <h3>روغن گیربکس و دیفرانسیل</h3>
+      <p>روانکارهای صنعتی برای سیستم‌های انتقال قدرت در ناوگان‌های تجاری و معدنی.</p>
+    </div>
+    <div class="card">
+      <div class="n">03</div>
+      <h3>روغن هیدرولیک</h3>
+      <p>برای تجهیزات سنگین، ماشین‌آلات راه‌سازی و معدنی با شرایط کاری سخت.</p>
+    </div>
+    <div class="card">
+      <div class="n">04</div>
+      <h3>مایعات خنک‌کننده و ضدیخ</h3>
+      <p>محافظت از سیستم خنک‌کاری موتور در شرایط اقلیمی متنوع کشور.</p>
+    </div>
+  </div>
+
+  <h2 class="h">مخاطبان</h2>
+  <div class="grid">
+    <div class="card"><h3>تولیدکنندگان خودرو</h3><p>همکاری در تأمین روانکار استاندارد خطوط تولید.</p></div>
+    <div class="card"><h3>نمایندگی‌های خودرو</h3><p>تأمین مستقیم و فله برای کاهش هزینه و قطع‌شدگی موجودی.</p></div>
+    <div class="card"><h3>معادن و واحدهای ترابری</h3><p>روانکار مقیاس‌پذیر برای ناوگان سنگین.</p></div>
+    <div class="card"><h3>شرکت‌های حمل‌ونقل و لجستیک</h3><p>دولتی و خصوصی، با نیاز مستمر به روانکار دیزل.</p></div>
+  </div>
+
+  <h2 class="h">طرح فله در یک نگاه</h2>
+  <div class="stats">
+    <div class="stat"><b>۱</b><span>پایلوت فعال (پارتاک دیزل سپهر)</span></div>
+    <div class="stat"><b>۵</b><span>هدف فاز بعدی</span></div>
+    <div class="stat"><b>۱۰</b><span>هدف بلندمدت مخازن</span></div>
+  </div>
+
+  <div class="note">
+    <span>ⓘ</span>
+    <div>برای شرح کامل طرح مخازن هوشمند و نحوه کار سامانه LUBESTATION، به بخش <b>Scheme Overview</b> مراجعه کنید.</div>
+  </div>
+</main>
+
+</body>
+</html>

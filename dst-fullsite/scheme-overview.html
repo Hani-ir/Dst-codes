@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Scheme Overview — LUBESTATION</title>
+<meta name="description" content="معرفی طرح مخازن فله هوشمند LUBESTATION.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0c0c;
+    --cyan:#22d3ee;
+    --green:#22c55e;
+    --ink:#f5f7f7;
+    --muted:#9aa5a3;
+    --line:rgba(255,255,255,.10);
+    --panel:rgba(255,255,255,.04);
+    --radius:14px;
+    --maxw:1100px;
+  }
+  *,*::before,*::after{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;background:var(--bg);color:var(--ink);
+    font-family:"Vazirmatn",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit;text-decoration:none}
+
+  header.top{
+    position:sticky;top:0;z-index:20;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:16px 24px;background:rgba(10,12,12,.85);backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--line);
+  }
+  header.top .word{font-weight:800;font-size:18px;letter-spacing:.02em}
+  header.top .word b{color:var(--cyan)}
+  .home-btn{
+    display:flex;align-items:center;gap:6px;
+    padding:8px 14px;border:1px solid var(--line);border-radius:999px;
+    font-size:13px;color:var(--muted);
+  }
+  .home-btn:hover{color:var(--ink);border-color:var(--cyan)}
+
+  main{max-width:var(--maxw);margin:0 auto;padding:48px 24px 96px}
+
+  .kicker{
+    display:inline-flex;align-items:center;gap:8px;font-size:12.5px;
+    letter-spacing:.08em;color:var(--cyan);text-transform:uppercase;margin-bottom:14px;
+  }
+  .kicker .dot{width:6px;height:6px;border-radius:50%;background:var(--cyan);
+    box-shadow:0 0 8px 2px rgba(34,211,238,.6)}
+  h1{font-size:clamp(28px,5vw,44px);line-height:1.25;margin:0 0 16px;font-weight:800}
+  h1 span{color:var(--green)}
+  .lede{color:var(--muted);font-size:17px;line-height:1.9;max-width:720px;margin:0 0 48px}
+
+  h2.h{font-size:20px;font-weight:700;margin:56px 0 20px;padding-right:12px;border-right:3px solid var(--cyan)}
+
+  .flow{display:flex;flex-direction:column;gap:0;margin-top:8px}
+  .step{
+    display:flex;gap:18px;padding:22px 0;border-bottom:1px solid var(--line);
+  }
+  .step:last-child{border-bottom:none}
+  .step .num{
+    flex:none;width:40px;height:40px;border-radius:50%;
+    background:var(--panel);border:1px solid var(--line);
+    display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--cyan);
+  }
+  .step h3{margin:0 0 6px;font-size:16px;font-weight:700}
+  .step p{margin:0;font-size:13.5px;color:var(--muted);line-height:1.8;max-width:620px}
+
+  .pilot{
+    margin-top:48px;padding:24px;border:1px solid var(--line);border-radius:var(--radius);
+    background:var(--panel);
+    display:flex;flex-wrap:wrap;gap:24px;align-items:center;justify-content:space-between;
+  }
+  .pilot .label{font-size:12.5px;color:var(--muted);letter-spacing:.04em;text-transform:uppercase;margin-bottom:6px}
+  .pilot .name{font-size:19px;font-weight:800}
+  .pilot .badge{
+    padding:6px 14px;border-radius:999px;border:1px solid var(--green);color:var(--green);
+    font-size:12.5px;font-weight:700;
+  }
+
+  .roadmap{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-top:20px}
+  .rcard{padding:20px;border:1px solid var(--line);border-radius:var(--radius);text-align:center}
+  .rcard b{display:block;font-size:24px;color:var(--cyan);margin-bottom:4px}
+  .rcard span{font-size:12.5px;color:var(--muted)}
+
+  .note{
+    margin-top:56px;padding:16px 18px;border:1px dashed var(--line);border-radius:var(--radius);
+    font-size:13px;color:var(--muted);line-height:1.8;display:flex;gap:10px;
+  }
+  .note b{color:var(--ink)}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="word">DST · <b>Lubestation</b></div>
+  <a class="home-btn" href="index.html">
+    <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v9h14v-9"/></svg>
+    خانه
+  </a>
+</header>
+
+<main>
+  <span class="kicker"><span class="dot"></span>Scheme Overview</span>
+  <h1>طرح <span>روغن فله</span> LUBESTATION</h1>
+  <p class="lede">
+    LUBESTATION سامانه مدیریت و پایش مخازن هوشمند و پلمپ‌شده‌ی روغن دیزل است که در نمایندگی‌های سراسر کشور نصب می‌شود.
+    هر برداشت روغن با کد خودرو ثبت می‌شود، مصرف به‌صورت لحظه‌ای قابل پایش است و مدیریت ارشد DST نمای کلی همه‌ی جایگاه‌ها را
+    به‌صورت یکپارچه در اختیار دارد.
+  </p>
+
+  <h2 class="h">طرح چطور کار می‌کند</h2>
+  <div class="flow">
+    <div class="step">
+      <div class="num">۱</div>
+      <div><h3>نصب مخزن پلمپ‌شده</h3><p>مخزن هوشمند در نمایندگی نصب و با سامانه مرکزی متصل می‌شود؛ پلمپ فیزیکی جلوی دستکاری و افت کیفیت را می‌گیرد.</p></div>
+    </div>
+    <div class="step">
+      <div class="num">۲</div>
+      <div><h3>ثبت برداشت با کد خودرو</h3><p>هر برداشت روغن برای یک خودروی مشخص ثبت می‌شود؛ ردیابی کامل مصرف به تفکیک خودرو و تاریخ.</p></div>
+    </div>
+    <div class="step">
+      <div class="num">۳</div>
+      <div><h3>پایش لحظه‌ای مصرف و موجودی</h3><p>سطح مخزن، نرخ مصرف و زمان تقریبی اتمام موجودی به‌صورت آنلاین قابل مشاهده است.</p></div>
+    </div>
+    <div class="step">
+      <div class="num">۴</div>
+      <div><h3>نظارت سراسری مدیریت ارشد</h3><p>داشبورد Corporate Governance نمای کلی همه جایگاه‌ها را در یک صفحه نشان می‌دهد.</p></div>
+    </div>
+  </div>
+
+  <h2 class="h">پایلوت فعال</h2>
+  <div class="pilot">
+    <div>
+      <div class="label">نمایندگی پایلوت</div>
+      <div class="name">پارتاک دیزل سپهر (Mammut)</div>
+    </div>
+    <span class="badge">داده واقعی فعال</span>
+  </div>
+
+  <h2 class="h">نقشه راه توسعه</h2>
+  <div class="roadmap">
+    <div class="rcard"><b>۱</b><span>فاز فعلی — پایلوت</span></div>
+    <div class="rcard"><b>۵</b><span>فاز بعدی — توسعه اولیه</span></div>
+    <div class="rcard"><b>۱۰</b><span>هدف میان‌مدت</span></div>
+  </div>
+
+  <div class="note">
+    <span>ⓘ</span>
+    <div>برای مشاهده‌ی عملیاتی سامانه (ورود نمایندگی، داشبورد مخازن، ثبت برداشت)، به بخش <b>Partner Ecosystem</b> یا مستقیماً به اپ عملیاتی LUBESTATION بروید.</div>
+  </div>
+</main>
+
+</body>
+</html>
