@@ -87,6 +87,7 @@ body:not(.unlocked) #gate{display:flex}
 .tagn{font-size:10.5px;border:1px solid var(--brass);color:var(--brass);border-radius:6px;padding:0 6px;font-weight:700}
 .gaugewrap{display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center}
 .gaugesvg{width:100%;max-width:448px;height:auto;display:block;direction:ltr}
+.minigauge{width:100%;max-width:120px;height:auto;display:block;direction:ltr}
 .gval{font-size:30px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.1;margin-top:-4px}
 .gval small{font-size:13px;font-weight:400;color:var(--muted)}
 .gpct{font-size:12px;color:var(--muted)}
@@ -221,17 +222,47 @@ function status(s){
 }
 var LBL={ok:'عادی',warn:'نیاز به شارژ',alarm:'هشدار فعال'};
 
+// ---- small semicircle gauge for the goal-achievement KPI card ----
+function miniGauge(percent){
+  var p=Math.max(0,Math.min(100,percent));
+  var CX=60,CY=52,R=42,T=9;
+  function pt(f,r){var a=Math.PI*(1-f);return [CX+r*Math.cos(a),CY-r*Math.sin(a)]}
+  function arc(f1,f2,r){var a=pt(f1,r),b=pt(f2,r);
+    return 'M'+a+' A'+r+' '+r+' 0 0 1 '+b;}
+  var color=p>=80?'#3DBE6A':p>=50?'#FDB913':'#E5484D';
+  var g='<svg viewBox="0 0 120 64" class="minigauge" role="img" aria-label="درصد تحقق اهداف '+faN.format(Math.round(p))+' درصد">';
+  g+='<path d="'+arc(0.003,0.997,R)+'" fill="none" stroke="#3A3435" stroke-width="'+T+'" stroke-linecap="round"/>';
+  if(p>0.3) g+='<path d="'+arc(0.003,Math.max(0.003,p/100-0.003),R)+'" fill="none" stroke="'+color+'" stroke-width="'+T+'" stroke-linecap="round"/>';
+  var nid='mg'+(GAUGE_SEQ++);
+  g+='<g id="'+nid+'"><polygon points="'+(CX-R+10)+','+CY+' '+CX+','+(CY-3)+' '+CX+','+(CY+3)+'" fill="#F3EFEA"/></g>';
+  g+='<circle cx="'+CX+'" cy="'+CY+'" r="6" fill="#F3EFEA"/><circle cx="'+CX+'" cy="'+CY+'" r="2.4" fill="#231F20"/></svg>';
+  setTimeout(function(){
+    var nd=document.getElementById(nid); if(!nd)return;
+    var tgt=180*p/100, reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+    function setA(a){nd.setAttribute('transform','rotate('+a+' '+CX+' '+CY+')');}
+    if(reduce){setA(tgt);return;}
+    var t0=performance.now();
+    (function fr(t){var k=Math.min(1,(t-t0)/1100),e=1-Math.pow(1-k,3);setA(tgt*e);if(k<1)requestAnimationFrame(fr);})(t0);
+  },30);
+  return g;
+}
+
 // ---- KPI summary ----
 (function(){
   var totWeekly=0, totInv=0, needCharge=0, alarms=0;
   ST.forEach(function(s){totWeekly+=s.weekly; totInv+=s.inv; alarms+=s.alarms; if(status(s)!=='ok'&&s.alarms===0)needCharge++; if(status(s)==='warn')0;});
   needCharge=ST.filter(function(s){return status(s)==='warn'}).length;
+  var totCap=ST.reduce(function(a,s){return a+s.cap},0);
+  var goalPct=totCap?Math.round(totInv/totCap*100):0;
   document.getElementById('sum').innerHTML=
    '<div class="kpi"><span>تعداد جایگاه</span><b>'+fa(ST.length)+' <small>('+fa(1)+' واقعی)</small></b></div>'+
    '<div class="kpi"><span>مصرف کل هفتگی</span><b>'+fa(totWeekly)+' <small>لیتر</small></b></div>'+
-   '<div class="kpi"><span>موجودی کل</span><b>'+fa(totInv)+' <small>از '+fa(ST.reduce(function(a,s){return a+s.cap},0))+'</small></b></div>'+
+   '<div class="kpi"><span>موجودی کل</span><b>'+fa(totInv)+' <small>از '+fa(totCap)+'</small></b></div>'+
    '<div class="kpi"><span>نیازمند شارژ</span><b style="color:'+(needCharge?'var(--amber)':'var(--fg)')+'">'+fa(needCharge)+' <small>جایگاه</small></b></div>'+
-   '<div class="kpi"><span>هشدار فعال</span><b style="color:'+(alarms?'var(--red)':'var(--fg)')+'">'+fa(alarms)+'</b></div>';
+   '<div class="kpi" style="display:flex;flex-direction:column;align-items:center;gap:2px">'+
+     '<span>درصد تحقق اهداف</span>'+miniGauge(goalPct)+
+     '<b style="margin-top:-6px">'+fa(goalPct)+'<small>٪</small></b>'+
+   '</div>';
 })();
 
 // ---- graduated inventory gauge (approved Partak style, dark theme) ----
