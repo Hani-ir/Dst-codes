@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" class="orb" viewBox="0 0 64 64" width="96" height="96" fill="none" role="img" aria-label="Loading">
   <style>
     /* Two knobs: color is the ink, --rate multiplies every duration. */
-    svg { color: #f5f5f7; --rate: 1; }
+    svg { color: #FDB913; --rate: 1; }
 
     /* an ellipse is a circle under scaleY, so the plane is squashed and the
        arm just rotates */
