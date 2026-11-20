@@ -1,0 +1,20 @@
+# Front controller: /api/bot/whoami, /api/bot/report/ceo-daily, ... -> index.php
+Options -Indexes
+<IfModule mod_rewrite.c>
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ index.php [L]
+</IfModule>
+# Pass the X-Bot-Key header through on CGI/FastCGI setups
+<IfModule mod_setenvif.c>
+SetEnvIf X-Bot-Key "(.+)" HTTP_X_BOT_KEY=$1
+</IfModule>
+<FilesMatch "\.(json|log|md|sh)$">
+<IfModule mod_authz_core.c>
+Require all denied
+</IfModule>
+<IfModule !mod_authz_core.c>
+Deny from all
+</IfModule>
+</FilesMatch>

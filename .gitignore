@@ -1,0 +1,5 @@
+dst-bot-data/
+data_path.php
+BOT_KEY.txt
+ADMIN_PASSWORD.txt
+*.dump
